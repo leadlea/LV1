@@ -9,6 +9,7 @@ provider:
     RESULTS_TABLE: ai-levels-results
     PROGRESS_TABLE: ai-levels-progress
     BEDROCK_MODEL_ID: global.anthropic.claude-opus-4-6-v1
+  timeout: 60
   iam:
     role:
       statements:
