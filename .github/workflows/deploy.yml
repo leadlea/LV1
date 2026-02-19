@@ -24,11 +24,11 @@ jobs:
 
   deploy-frontend:
     runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ap-northeast-1
     steps:
       - uses: actions/checkout@v4
       - run: aws s3 sync frontend/ s3://ai-levels --delete
       - run: aws cloudfront create-invalidation --distribution-id E1SGV7O9QH5NRD --paths "/*"
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ap-northeast-1
