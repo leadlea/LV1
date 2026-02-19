@@ -1,0 +1,89 @@
+service: ai-levels-backend
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.12
+  region: ap-northeast-1
+  environment:
+    RESULTS_TABLE: ai-levels-results
+    PROGRESS_TABLE: ai-levels-progress
+    BEDROCK_MODEL_ID: global.anthropic.claude-opus-4-6-v1
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:Query
+          Resource:
+            - !GetAtt ResultsTable.Arn
+            - !GetAtt ProgressTable.Arn
+        - Effect: Allow
+          Action:
+            - bedrock:InvokeModel
+          Resource: "*"
+
+functions:
+  generate:
+    handler: backend/handlers/generate_handler.handler
+    events:
+      - http:
+          path: lv1/generate
+          method: post
+          cors: true
+  grade:
+    handler: backend/handlers/grade_handler.handler
+    events:
+      - http:
+          path: lv1/grade
+          method: post
+          cors: true
+  complete:
+    handler: backend/handlers/complete_handler.handler
+    events:
+      - http:
+          path: lv1/complete
+          method: post
+          cors: true
+  gate:
+    handler: backend/handlers/gate_handler.handler
+    events:
+      - http:
+          path: levels/status
+          method: get
+          cors: true
+
+resources:
+  Resources:
+    ResultsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ai-levels-results
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: PK
+            AttributeType: S
+          - AttributeName: SK
+            AttributeType: S
+        KeySchema:
+          - AttributeName: PK
+            KeyType: HASH
+          - AttributeName: SK
+            KeyType: RANGE
+    ProgressTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ai-levels-progress
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: PK
+            AttributeType: S
+          - AttributeName: SK
+            AttributeType: S
+        KeySchema:
+          - AttributeName: PK
+            KeyType: HASH
+          - AttributeName: SK
+            KeyType: RANGE

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Levels - Lv1 カリキュラム</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1><a href="index.html" class="header__link">AI Levels</a></h1>
+      <p class="subtitle">Lv1: 分業設計×依頼設計×品質担保×2ケース再現</p>
+    </header>
+
+    <!-- ステップ進捗バー -->
+    <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+      <div class="progress-bar__fill" id="progress-fill"></div>
+      <span class="progress-bar__label" id="progress-label">準備中...</span>
+    </div>
+
+    <main class="lv1-main">
+      <!-- 読み込み中 -->
+      <section class="lv1-section" id="section-loading">
+        <div class="spinner" aria-label="読み込み中"></div>
+        <p class="lv1-loading-text">テスト・ドリルを生成しています...</p>
+      </section>
+
+      <!-- 設問表示 + 回答入力 -->
+      <section class="lv1-section" id="section-question" hidden>
+        <div class="question-card">
+          <div class="question-card__header">
+            <span class="question-card__step" id="question-step"></span>
+            <span class="question-card__type" id="question-type"></span>
+          </div>
+          <div class="question-card__context" id="question-context" hidden></div>
+          <p class="question-card__prompt" id="question-prompt"></p>
+
+          <!-- 選択肢（multiple_choice用） -->
+          <fieldset class="question-card__options" id="question-options" hidden>
+            <legend class="sr-only">選択肢</legend>
+          </fieldset>
+
+          <!-- 自由記述（free_text / scenario用） -->
+          <div class="question-card__textarea-wrap" id="textarea-wrap" hidden>
+            <label for="answer-text" class="sr-only">回答を入力</label>
+            <textarea id="answer-text" class="question-card__textarea" rows="6" placeholder="回答を入力してください..."></textarea>
+          </div>
+
+          <button class="btn btn--primary" id="btn-submit" disabled>回答を送信</button>
+        </div>
+      </section>
+
+      <!-- 採点結果 + フィードバック -->
+      <section class="lv1-section" id="section-result" hidden>
+        <div class="result-card">
+          <div class="result-card__verdict" id="result-verdict"></div>
+          <div class="result-card__score" id="result-score"></div>
+          <div class="result-card__feedback">
+            <h3>フィードバック</h3>
+            <p id="result-feedback"></p>
+          </div>
+          <div class="result-card__explanation">
+            <h3>解説</h3>
+            <p id="result-explanation"></p>
+          </div>
+          <button class="btn btn--primary" id="btn-next">次のステップへ</button>
+        </div>
+      </section>
+
+      <!-- 最終結果 -->
+      <section class="lv1-section" id="section-final" hidden>
+        <div class="final-card">
+          <div class="final-card__icon" id="final-icon"></div>
+          <h2 class="final-card__title" id="final-title"></h2>
+          <p class="final-card__message" id="final-message"></p>
+          <div class="final-card__summary" id="final-summary"></div>
+          <a href="index.html" class="btn btn--primary">レベル選択に戻る</a>
+        </div>
+      </section>
+    </main>
+
+    <!-- エラーバナー -->
+    <div class="error-banner" id="error-banner" hidden>
+      <p id="error-message"></p>
+      <button id="error-retry-btn" class="btn btn--retry">リトライ</button>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

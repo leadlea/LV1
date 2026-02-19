@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Levels - レベル選択</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>AI Levels</h1>
+      <p class="subtitle">AIカリキュラム学習プラットフォーム</p>
+    </header>
+
+    <main class="levels-grid" id="levels-grid">
+      <div class="level-card level-card--unlocked" id="level-lv1" data-level="lv1">
+        <div class="level-card__badge">Lv1</div>
+        <h2 class="level-card__title">分業設計×依頼設計×品質担保×2ケース再現</h2>
+        <p class="level-card__desc">AIエージェントと連動したカリキュラムで基礎力を確認します。</p>
+        <div class="level-card__status" id="status-lv1"></div>
+        <a href="lv1.html" class="level-card__btn">開始する</a>
+      </div>
+
+      <div class="level-card level-card--locked" id="level-lv2" data-level="lv2" hidden>
+        <div class="level-card__badge">Lv2</div>
+        <div class="level-card__lock" aria-label="ロック中">🔒</div>
+        <h2 class="level-card__title">Coming Soon</h2>
+        <p class="level-card__desc">Lv1に合格すると解放されます。</p>
+      </div>
+
+      <div class="level-card level-card--locked" id="level-lv3" data-level="lv3" hidden>
+        <div class="level-card__badge">Lv3</div>
+        <div class="level-card__lock" aria-label="ロック中">🔒</div>
+        <h2 class="level-card__title">Coming Soon</h2>
+        <p class="level-card__desc">Lv2に合格すると解放されます。</p>
+      </div>
+
+      <div class="level-card level-card--locked" id="level-lv4" data-level="lv4" hidden>
+        <div class="level-card__badge">Lv4</div>
+        <div class="level-card__lock" aria-label="ロック中">🔒</div>
+        <h2 class="level-card__title">Coming Soon</h2>
+        <p class="level-card__desc">Lv3に合格すると解放されます。</p>
+      </div>
+    </main>
+
+    <div class="error-banner" id="error-banner" hidden>
+      <p id="error-message"></p>
+      <button id="error-retry-btn" class="btn btn--retry">リトライ</button>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/gate.js"></script>
+</body>
+</html>
