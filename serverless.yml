@@ -25,6 +25,11 @@ provider:
           Action:
             - bedrock:InvokeModel
           Resource: "*"
+        - Effect: Allow
+          Action:
+            - aws-marketplace:ViewSubscriptions
+            - aws-marketplace:Subscribe
+          Resource: "*"
 
 functions:
   generate:
