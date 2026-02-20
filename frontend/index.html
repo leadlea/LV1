@@ -4,17 +4,247 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Levels - レベル選択</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* === Index Page Overrides === */
+    .index-body {
+      font-family: "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f7f8fa;
+      min-height: 100vh;
+    }
+
+    .index-nav {
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .index-nav__icon {
+      width: 36px;
+      height: 36px;
+      background: #1e3a5f;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      color: #fff;
+    }
+
+    .index-nav__name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1e3a5f;
+      letter-spacing: 0.01em;
+    }
+
+    .index-container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 1.5rem 3rem;
+    }
+
+    .index-hero {
+      text-align: center;
+      padding: 3rem 0 1.5rem;
+    }
+
+    .index-hero h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #1a2332;
+      letter-spacing: -0.01em;
+    }
+
+    .index-hero .subtitle {
+      color: #6b7280;
+      font-size: 0.95rem;
+      margin-top: 0.4rem;
+      font-weight: 400;
+    }
+
+    .index-section-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 1rem;
+    }
+
+    /* Level cards on index */
+    .index-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .index-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 1.75rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .index-card.level-card--unlocked:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(30, 58, 95, 0.08);
+      border-color: #1e3a5f;
+    }
+
+    .index-card.level-card--locked {
+      opacity: 0.45;
+      background: #fafafa;
+    }
+
+    .index-card .level-card__badge {
+      background: #1e3a5f;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.2rem 0.75rem;
+      border-radius: 6px;
+      letter-spacing: 0.03em;
+      align-self: flex-start;
+      margin-bottom: 0.85rem;
+    }
+
+    .index-card.level-card--locked .level-card__badge {
+      background: #d1d5db;
+      color: #6b7280;
+    }
+
+    .index-card .level-card__lock {
+      font-size: 1.75rem;
+      margin-bottom: 0.5rem;
+      filter: grayscale(0.6);
+    }
+
+    .index-card .level-card__title {
+      color: #1a2332;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      line-height: 1.5;
+    }
+
+    .index-card .level-card__desc {
+      color: #6b7280;
+      font-size: 0.875rem;
+      flex: 1;
+      line-height: 1.65;
+    }
+
+    .index-card .level-card__status {
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .index-card .level-card__status--passed {
+      color: #059669;
+    }
+
+    .index-card .level-card__btn {
+      display: inline-block;
+      margin-top: 1.25rem;
+      padding: 0.65rem 1.5rem;
+      background: #1e3a5f;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: background 0.15s ease;
+      align-self: flex-start;
+    }
+
+    .index-card .level-card__btn:hover {
+      background: #152d4a;
+    }
+
+    /* Error banner */
+    .index-error {
+      margin-top: 1.5rem;
+      padding: 1rem 1.5rem;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .index-error p {
+      color: #b91c1c;
+      margin-bottom: 0.75rem;
+      font-size: 0.9rem;
+    }
+
+    .index-error .btn--retry {
+      background: #dc2626;
+      color: #fff;
+      border: none;
+      padding: 0.45rem 1.1rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .index-error .btn--retry:hover {
+      background: #b91c1c;
+    }
+
+    /* Footer */
+    .index-footer {
+      text-align: center;
+      padding: 2.5rem 0 1rem;
+      color: #9ca3af;
+      font-size: 0.75rem;
+    }
+
+    @media (max-width: 600px) {
+      .index-hero {
+        padding: 2rem 0 1.25rem;
+      }
+      .index-hero h1 {
+        font-size: 1.4rem;
+      }
+      .index-grid {
+        grid-template-columns: 1fr;
+      }
+      .index-container {
+        padding: 0 1rem 2rem;
+      }
+    }
+  </style>
 </head>
-<body>
-  <div class="container">
-    <header class="header">
+<body class="index-body">
+  <nav class="index-nav">
+    <div class="index-nav__icon">AI</div>
+    <span class="index-nav__name">AI Levels</span>
+  </nav>
+
+  <div class="index-container">
+    <header class="index-hero header">
       <h1>AI Levels</h1>
       <p class="subtitle">AIカリキュラム学習プラットフォーム</p>
     </header>
 
-    <main class="levels-grid" id="levels-grid">
-      <div class="level-card level-card--unlocked" id="level-lv1" data-level="lv1">
+    <p class="index-section-label">カリキュラム一覧</p>
+
+    <main class="index-grid levels-grid" id="levels-grid">
+      <div class="index-card level-card level-card--unlocked" id="level-lv1" data-level="lv1">
         <div class="level-card__badge">Lv1</div>
         <h2 class="level-card__title">分業設計×依頼設計×品質担保×2ケース再現</h2>
         <p class="level-card__desc">AIエージェントと連動したカリキュラムで基礎力を確認します。</p>
@@ -22,21 +252,21 @@
         <a href="lv1.html" class="level-card__btn">開始する</a>
       </div>
 
-      <div class="level-card level-card--locked" id="level-lv2" data-level="lv2" hidden>
+      <div class="index-card level-card level-card--locked" id="level-lv2" data-level="lv2" hidden>
         <div class="level-card__badge">Lv2</div>
         <div class="level-card__lock" aria-label="ロック中">🔒</div>
         <h2 class="level-card__title">Coming Soon</h2>
         <p class="level-card__desc">Lv1に合格すると解放されます。</p>
       </div>
 
-      <div class="level-card level-card--locked" id="level-lv3" data-level="lv3" hidden>
+      <div class="index-card level-card level-card--locked" id="level-lv3" data-level="lv3" hidden>
         <div class="level-card__badge">Lv3</div>
         <div class="level-card__lock" aria-label="ロック中">🔒</div>
         <h2 class="level-card__title">Coming Soon</h2>
         <p class="level-card__desc">Lv2に合格すると解放されます。</p>
       </div>
 
-      <div class="level-card level-card--locked" id="level-lv4" data-level="lv4" hidden>
+      <div class="index-card level-card level-card--locked" id="level-lv4" data-level="lv4" hidden>
         <div class="level-card__badge">Lv4</div>
         <div class="level-card__lock" aria-label="ロック中">🔒</div>
         <h2 class="level-card__title">Coming Soon</h2>
@@ -44,10 +274,14 @@
       </div>
     </main>
 
-    <div class="error-banner" id="error-banner" hidden>
+    <div class="index-error error-banner" id="error-banner" hidden>
       <p id="error-message"></p>
       <button id="error-retry-btn" class="btn btn--retry">リトライ</button>
     </div>
+
+    <footer class="index-footer">
+      Powered by Amazon Bedrock &amp; Claude Sonnet 4.6
+    </footer>
   </div>
 
   <script src="js/config.js"></script>
