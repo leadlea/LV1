@@ -7,7 +7,7 @@ provider:
   environment:
     RESULTS_TABLE: ai-levels-results
     PROGRESS_TABLE: ai-levels-progress
-    BEDROCK_MODEL_ID: global.anthropic.claude-opus-4-6-v1
+    BEDROCK_MODEL_ID: global.anthropic.claude-sonnet-4-6
   timeout: 60
   iam:
     role:
