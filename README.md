@@ -1,5 +1,7 @@
 # AI Levels - AIカリキュラム実行システム
 
+🔗 **https://d2iarskyjm3rk1.cloudfront.net/**
+
 3つのAIエージェント（出題・採点・レビュー）が連動し、カリキュラム「分業設計×依頼設計×品質担保×2ケース再現」をブラウザ上でログインなしに実行できるシステム。
 
 ## システムアーキテクチャ
@@ -23,7 +25,7 @@ graph TB
     end
 
     subgraph "AWSサービス"
-        Bedrock[Amazon Bedrock<br/>Claude Opus 4.6]
+        Bedrock[Amazon Bedrock<br/>Claude Sonnet 4.6]
         DDB_R[DynamoDB<br/>ai-levels-results]
         DDB_P[DynamoDB<br/>ai-levels-progress]
     end
@@ -51,35 +53,34 @@ sequenceDiagram
     participant TG as 出題エージェント
     participant G as 採点エージェント
     participant R as レビューエージェント
-    participant BR as Bedrock Claude Opus 4.6
+    participant BR as Bedrock Claude Sonnet 4.6
     participant DB as DynamoDB
 
-    U->>FE: Lv1セッション開始
+    U->>FE: テスト開始
     FE->>API: POST /lv1/generate
-    API->>TG: テスト生成リクエスト
+    API->>TG: 出題リクエスト
     TG->>BR: プロンプト送信
-    BR-->>TG: テスト・ドリル生成
-    TG-->>FE: 設問データ（JSON）
-    FE->>U: 設問表示
+    BR-->>TG: 3問のテスト生成
+    TG-->>FE: questions JSON
 
-    loop 各ステップ（設問ごと）
+    loop 各設問 (step 1〜3)
         U->>FE: 回答入力・送信
         FE->>API: POST /lv1/grade
         API->>G: 採点リクエスト
-        G->>BR: 回答評価
-        BR-->>G: 合否判定 + スコア
-        G->>R: 採点結果を渡す
+        G->>BR: 採点プロンプト
+        BR-->>G: passed + score
+        G->>R: レビュー依頼
         R->>BR: フィードバック生成
-        BR-->>R: 解説・アドバイス
-        R-->>FE: 採点結果 + フィードバック
-        FE->>U: 結果・解説表示
+        BR-->>R: feedback + explanation
+        R-->>G: レビュー結果
+        G-->>FE: 採点+レビュー結果
+        FE->>U: スコア・フィードバック表示
     end
 
-    U->>FE: 全ステップ完了
     FE->>API: POST /lv1/complete
-    API->>DB: 完了レコード保存
-    DB-->>FE: 保存成功
-    FE->>U: 最終結果表示
+    API->>DB: 結果保存 (results)
+    API->>DB: 進捗更新 (progress)
+    DB-->>FE: saved: true
 ```
 
 ## ゲーティング構造
@@ -87,91 +88,104 @@ sequenceDiagram
 ```mermaid
 graph LR
     subgraph "レベル進行"
-        LV1[Lv1<br/>分業設計×依頼設計<br/>×品質担保×2ケース再現]
-        LV2[Lv2<br/>🔒 ロック]
-        LV3[Lv3<br/>🔒 ロック]
-        LV4[Lv4<br/>🔒 ロック]
+        LV1[LV1<br/>常時アンロック]
+        LV2[LV2<br/>LV1合格で解放]
+        LV3[LV3<br/>未実装]
+        LV4[LV4<br/>未実装]
     end
 
-    LV1 -->|合格| LV2
-    LV2 -->|合格| LV3
-    LV3 -->|合格| LV4
+    LV1 -->|lv1_passed = true| LV2
+    LV2 -.->|将来実装| LV3
+    LV3 -.->|将来実装| LV4
 
-    style LV1 fill:#4CAF50,color:#fff
-    style LV2 fill:#9E9E9E,color:#fff
-    style LV3 fill:#9E9E9E,color:#fff
-    style LV4 fill:#9E9E9E,color:#fff
+    subgraph "進捗管理"
+        GATE[GET /levels/status]
+        PROG[(DynamoDB<br/>ai-levels-progress)]
+    end
+
+    GATE --> PROG
+    PROG -->|lv1_passed| LV2
 ```
-
-
-Lv1に合格するとLv2がアンロックされる段階的進行方式。MVP段階ではLv1のみ実装済み、Lv2〜Lv4は将来拡張用のスロットとして存在。
 
 ## 技術スタック
 
-| レイヤー | 技術 |
-|---------|------|
-| フロントエンド | バニラ HTML/CSS/JS（フレームワーク不使用） |
-| 配信 | CloudFront + S3 |
-| API | API Gateway（REST） |
-| コンピュート | AWS Lambda（Python 3.12） |
-| AI モデル | Amazon Bedrock - Claude Opus 4.6（`global.anthropic.claude-opus-4-6-v1`） |
-| データベース | DynamoDB（`ai-levels-results`, `ai-levels-progress`） |
-| IaC | Serverless Framework v3 |
-| CI/CD | GitHub Actions |
+| レイヤー | 技術 | 備考 |
+|---------|------|------|
+| フロントエンド | HTML / CSS / Vanilla JS | SPA不要、静的ホスティング |
+| CDN | CloudFront | S3オリジン、キャッシュ無効化対応 |
+| API | API Gateway REST | CORS有効、29秒タイムアウト制限 |
+| コンピュート | AWS Lambda (Python 3.12) | タイムアウト60秒 |
+| AI | Amazon Bedrock Claude Sonnet 4.6 | グローバル推論プロファイル |
+| DB | DynamoDB (PAY_PER_REQUEST) | results + progress 2テーブル |
+| IaC | Serverless Framework | ローカルv4 / CI v3 |
+| CI/CD | GitHub Actions | main push で自動デプロイ |
+| テスト | pytest + Hypothesis | ユニット57件 + プロパティ13件 |
+
+### なぜ Claude Sonnet 4.6 か
+
+API Gatewayのハードリミットは29秒。Claude Opus 4.6では1リクエストあたり35〜44秒かかり、タイムアウトが頻発した。Claude Sonnet 4.6はMVPに十分な品質（テスト生成・採点・レビュー）を29秒以内で提供でき、コスト効率も良い。
 
 ## プロジェクト構成
 
 ```
+.
 ├── backend/
 │   ├── handlers/
 │   │   ├── generate_handler.py   # 出題エージェント
-│   │   ├── grade_handler.py      # 採点+レビューエージェント
-│   │   ├── complete_handler.py   # 完了レコード保存
-│   │   └── gate_handler.py       # ゲーティング判定
+│   │   ├── grade_handler.py      # 採点エージェント + レビュー呼出
+│   │   ├── complete_handler.py   # 完了保存
+│   │   └── gate_handler.py       # ゲーティング
 │   └── lib/
-│       ├── bedrock_client.py     # Bedrock呼び出し共通モジュール
+│       ├── bedrock_client.py     # Bedrock共通クライアント (リトライ付き)
 │       └── reviewer.py           # レビューエージェント
 ├── frontend/
-│   ├── index.html                # レベル選択画面
-│   ├── lv1.html                  # Lv1カリキュラム実行画面
+│   ├── index.html                # トップページ
+│   ├── lv1.html                  # LV1テスト画面
+│   ├── favicon.ico
 │   ├── css/style.css
 │   └── js/
-│       ├── app.js                # セッション管理・フロー制御
-│       ├── api.js                # APIクライアント
-│       └── gate.js               # ゲーティングロジック
+│       ├── config.js             # API Base URL設定
+│       ├── api.js                # API通信層
+│       ├── app.js                # LV1アプリロジック
+│       └── gate.js               # ゲーティングUI
 ├── tests/
-│   ├── unit/                     # ユニットテスト（57件）
-│   └── property/                 # プロパティベーステスト（13件）
-├── serverless.yml
-└── .github/workflows/deploy.yml
+│   ├── unit/                     # ユニットテスト (57件)
+│   └── property/                 # プロパティベーステスト (13件)
+├── .github/workflows/deploy.yml  # CI/CDパイプライン
+├── serverless.yml                # インフラ定義
+└── requirements.txt              # Python依存
 ```
 
 ## 設計上の特徴
 
-- **認証不要**: Lv1はログインなしでアクセス可能。セッションはブラウザの `sessionStorage` で管理
-- **完了時のみDB保存**: 途中離脱ではDynamoDBへの書き込みが発生しない（ストレージコスト最適化）
-- **1 APIコールで採点+レビュー**: `/lv1/grade` 内部でGrader → Reviewerを連鎖実行
-- **指数バックオフリトライ**: Bedrock呼び出しのThrottlingExceptionに対して最大3回リトライ
-- **プロパティベーステスト**: Hypothesisを使用した8つの正当性プロパティで形式的な品質保証
+- **認証なし**: session_id (UUID v4) ベースでセッション管理。ログイン不要でブラウザから即実行可能
+- **3エージェント分業**: 出題・採点・レビューを独立したプロンプト/ハンドラで分離し、責務を明確化
+- **リトライ付きBedrock呼出**: ThrottlingException等に対し指数バックオフで最大3回リトライ
+- **コードフェンス除去**: LLMが ` ```json ``` ` で囲んで返すケースに対応する `strip_code_fence()` を実装
+- **CORS全開放**: `Access-Control-Allow-Origin: *` で全ハンドラ統一
+- **DynamoDB 2テーブル設計**: results (テスト結果詳細) と progress (レベル進捗) を分離
 
 ## ローカル開発
 
 ```bash
-# 依存関係インストール
+# 依存インストール
 pip install -r requirements.txt
 
-# テスト実行（70件）
-python -m pytest tests/ -v
+# テスト実行
+pytest tests/ -v
+
+# デプロイ (Serverless Framework v4)
+serverless deploy --stage prod
 ```
 
 ## デプロイ
 
-`main` ブランチへのpushで GitHub Actions が自動実行:
+`main` ブランチへの push で GitHub Actions が自動実行:
 
-1. バックエンド: `serverless deploy --stage prod`
-2. フロントエンド: `aws s3 sync` → CloudFront キャッシュ無効化
+1. **バックエンド**: `serverless deploy --stage prod` (Serverless Framework v3)
+2. **フロントエンド**: `aws s3 sync frontend/ s3://ai-levels --delete` → CloudFrontキャッシュ無効化
 
-必要なGitHub Secrets:
-- `SERVERLESS_ACCESS_KEY`
+必要な GitHub Secrets:
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
+- `SERVERLESS_ACCESS_KEY`
