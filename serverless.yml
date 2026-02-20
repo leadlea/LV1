@@ -1,5 +1,4 @@
 service: ai-levels-backend
-frameworkVersion: '3'
 
 provider:
   name: aws
