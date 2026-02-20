@@ -3,7 +3,7 @@
 import json
 import logging
 
-from backend.lib.bedrock_client import invoke_claude
+from backend.lib.bedrock_client import invoke_claude, strip_code_fence
 from backend.lib.reviewer import generate_feedback
 
 logger = logging.getLogger(__name__)
@@ -27,6 +27,7 @@ SYSTEM_PROMPT = """あなたはAIカリキュラム「分業設計×依頼設計
 def _parse_grade_result(result: dict) -> dict:
     """Bedrockレスポンスから採点結果を抽出しバリデーションする。"""
     text = result.get("content", [{}])[0].get("text", "")
+    text = strip_code_fence(text)
 
     try:
         data = json.loads(text)

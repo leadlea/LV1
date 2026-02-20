@@ -4,7 +4,7 @@ import json
 import logging
 import uuid
 
-from backend.lib.bedrock_client import invoke_claude
+from backend.lib.bedrock_client import invoke_claude, strip_code_fence
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +43,7 @@ def _parse_questions(result: dict) -> list[dict]:
     """Bedrockレスポンスからquestionsを抽出しバリデーションする。"""
     # Claude応答のcontent[0].textからJSONを取得
     text = result.get("content", [{}])[0].get("text", "")
+    text = strip_code_fence(text)
 
     try:
         data = json.loads(text)

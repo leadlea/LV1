@@ -3,7 +3,7 @@
 import json
 import logging
 
-from backend.lib.bedrock_client import invoke_claude
+from backend.lib.bedrock_client import invoke_claude, strip_code_fence
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +51,7 @@ def generate_feedback(question: dict, answer: str, grade_result: dict) -> dict:
     result = invoke_claude(SYSTEM_PROMPT, user_prompt)
 
     text = result.get("content", [{}])[0].get("text", "")
+    text = strip_code_fence(text)
 
     try:
         data = json.loads(text)

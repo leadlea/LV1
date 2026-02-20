@@ -1,4 +1,5 @@
 import json
+import re
 import time
 import logging
 
@@ -17,6 +18,16 @@ RETRYABLE_ERRORS = (
     "ServiceUnavailableException",
     "ModelTimeoutException",
 )
+
+_CODE_FENCE_RE = re.compile(r"^```(?:json)?\s*(.*?)\s*```$", flags=re.DOTALL | re.IGNORECASE)
+
+
+def strip_code_fence(text: str) -> str:
+    """Remove markdown code fences (```json ... ```) from LLM output."""
+    m = _CODE_FENCE_RE.match(text.strip())
+    if m:
+        return m.group(1).strip()
+    return text.strip()
 
 
 def invoke_claude(system_prompt: str, user_prompt: str) -> dict:
@@ -38,8 +49,9 @@ def invoke_claude(system_prompt: str, user_prompt: str) -> dict:
     body = json.dumps({
         "anthropic_version": "bedrock-2023-05-31",
         "max_tokens": 4096,
+        "temperature": 0.7,
         "system": system_prompt,
-        "messages": [{"role": "user", "content": user_prompt}],
+        "messages": [{"role": "user", "content": [{"type": "text", "text": user_prompt}]}],
     })
 
     last_exception = None

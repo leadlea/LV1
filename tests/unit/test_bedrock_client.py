@@ -59,7 +59,7 @@ class TestInvokeClaudeRegionAndModel:
             call_kwargs = mock_client.invoke_model.call_args[1]
             body = json.loads(call_kwargs["body"])
             assert body["system"] == "my system prompt"
-            assert body["messages"] == [{"role": "user", "content": "my user prompt"}]
+            assert body["messages"] == [{"role": "user", "content": [{"type": "text", "text": "my user prompt"}]}]
             assert body["anthropic_version"] == "bedrock-2023-05-31"
             assert body["max_tokens"] == 4096
 
