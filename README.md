@@ -267,3 +267,115 @@ table.query(
 - MVP段階ではこれで十分だが、本番運用時は以下を検討:
   - 外部システムで署名付きトークン (HMAC / JWT) を生成し、AI Levels側で検証
   - トークンに有効期限を設定し、リプレイ攻撃を防止
+
+## 提案: 採点結果返却API
+
+### 概要
+
+既存システムがAI Levelsの採点結果をプログラムで取得できるAPIを提供する。DynamoDBに保存済みの結果を、`user_id` または `session_id` をキーにJSON形式で返却する。
+
+### エンドポイント設計
+
+| メソッド | パス | 用途 |
+|---------|------|------|
+| `GET` | `/api/results/{user_id}` | ユーザーの全受験履歴を取得 |
+| `GET` | `/api/results/{user_id}/latest` | ユーザーの最新結果のみ取得 |
+| `GET` | `/api/results/session/{session_id}` | セッション単位で結果取得（現行互換） |
+
+### リクエスト・レスポンス例
+
+```
+GET /api/results/USR-12345
+Authorization: Bearer <api_key>
+```
+
+```json
+{
+  "user_id": "USR-12345",
+  "results": [
+    {
+      "session_id": "382cc632-2f79-4a0f-bbfb-7c855fb30cb5",
+      "level": "lv1",
+      "total_score": 80,
+      "final_passed": false,
+      "completed_at": "2026-02-20T06:18:39.585758+00:00",
+      "grades": [
+        {"step": 1, "score": 30, "passed": true},
+        {"step": 2, "score": 25, "passed": true},
+        {"step": 3, "score": 25, "passed": false}
+      ]
+    }
+  ],
+  "count": 1
+}
+```
+
+### 認証方式
+
+外部システム間通信のため、APIキー認証を採用:
+
+```
+Authorization: Bearer sk-ai-levels-xxxxxxxxxxxx
+```
+
+- API Gatewayの使用量プランとAPIキーで実装（追加インフラ不要）
+- 既存のCORS全開放エンドポイントとは別パスで分離
+
+### データフロー
+
+```mermaid
+sequenceDiagram
+    participant Ext as 既存システム
+    participant APIGW as API Gateway<br/>(APIキー認証)
+    participant Lambda as 結果取得 Lambda
+    participant DB as DynamoDB<br/>ai-levels-results
+
+    Ext->>APIGW: GET /api/results/USR-12345<br/>Authorization: Bearer <api_key>
+    APIGW->>APIGW: APIキー検証
+    APIGW->>Lambda: リクエスト転送
+    Lambda->>DB: Query PK=USER#USR-12345<br/>begins_with(SK, RESULT#)
+    DB-->>Lambda: 結果レコード群
+    Lambda-->>APIGW: JSON レスポンス
+    APIGW-->>Ext: 200 OK + 結果データ
+```
+
+### serverless.yml 追加分
+
+```yaml
+functions:
+  getResults:
+    handler: backend/handlers/results_handler.handler
+    events:
+      - http:
+          path: api/results/{user_id}
+          method: get
+          private: true  # APIキー必須
+
+  getLatestResult:
+    handler: backend/handlers/results_handler.latest_handler
+    events:
+      - http:
+          path: api/results/{user_id}/latest
+          method: get
+          private: true
+
+  getSessionResult:
+    handler: backend/handlers/results_handler.session_handler
+    events:
+      - http:
+          path: api/results/session/{session_id}
+          method: get
+          private: true
+```
+
+### 必要な変更箇所
+
+| ファイル | 変更内容 |
+|---------|---------|
+| `backend/handlers/results_handler.py` | 新規作成。DynamoDB Query で結果取得 |
+| `serverless.yml` | 上記3エンドポイント追加 + 使用量プラン/APIキー定義 |
+| `tests/unit/test_results_handler.py` | ユニットテスト |
+
+### 前提条件
+
+この結果返却APIは「ユーザー紐付け」提案（前セクション）の `USER#{user_id}` キー設計が実装済みであることが前提。現行の `SESSION#{session_id}` のみの場合は `/api/results/session/{session_id}` エンドポイントだけが利用可能。
