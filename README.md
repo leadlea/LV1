@@ -189,3 +189,81 @@ serverless deploy --stage prod
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 - `SERVERLESS_ACCESS_KEY`
+## 提案: 外部ログインシステムとのユーザー紐付け
+
+### 背景
+
+現在のシステムは `session_id` (UUID v4) で匿名セッション管理しているが、既存の外部システムにログイン機能とユーザー識別子が実装済みであれば、クエリパラメーター付きリンクを踏んでもらうだけでユーザー単位の回答保存が実現できる。
+
+### 仕組み
+
+```
+外部システム → リンク生成 → AI Levels → DynamoDB にユーザー紐付け保存
+```
+
+1. 外部システム（ログイン済み）がユーザーごとにリンクを生成:
+   ```
+   https://d2iarskyjm3rk1.cloudfront.net/lv1.html?user_id=USR-12345
+   ```
+
+2. フロントエンドが `user_id` をクエリパラメーターから取得し、全APIリクエストに付与
+
+3. バックエンドが `user_id` をDynamoDBのキーに組み込み、ユーザー単位で結果を保存
+
+### データフロー
+
+```mermaid
+sequenceDiagram
+    participant ExtSys as 外部システム<br/>(ログイン済み)
+    participant Browser as ブラウザ
+    participant FE as AI Levels<br/>フロントエンド
+    participant API as API Gateway
+    participant DB as DynamoDB
+
+    ExtSys->>Browser: リンク生成<br/>lv1.html?user_id=USR-12345
+    Browser->>FE: ページ読み込み
+    FE->>FE: URLから user_id 取得
+    FE->>API: POST /lv1/generate<br/>{session_id, user_id}
+    API-->>FE: questions
+    FE->>API: POST /lv1/grade<br/>{session_id, user_id, ...}
+    API-->>FE: 採点結果
+    FE->>API: POST /lv1/complete<br/>{session_id, user_id, ...}
+    API->>DB: PK=USER#USR-12345<br/>SK=RESULT#lv1#session_id
+    DB-->>FE: saved: true
+```
+
+### DynamoDB キー設計の変更
+
+| 現在 | 変更後 |
+|------|--------|
+| `PK: SESSION#{session_id}` | `PK: USER#{user_id}` |
+| `SK: RESULT#lv1` | `SK: RESULT#lv1#{session_id}` |
+
+この変更により、同一ユーザーの複数回受験履歴をクエリで一括取得できる:
+
+```python
+# ユーザーの全受験履歴を取得
+table.query(
+    KeyConditionExpression="PK = :pk AND begins_with(SK, :sk)",
+    ExpressionAttributeValues={
+        ":pk": f"USER#{user_id}",
+        ":sk": "RESULT#lv1"
+    }
+)
+```
+
+### 必要な変更箇所
+
+| ファイル | 変更内容 |
+|---------|---------|
+| `frontend/js/app.js` | `URLSearchParams` で `user_id` を取得、APIリクエストに付与 |
+| `frontend/js/api.js` | 各API呼び出しに `user_id` パラメーターを追加 |
+| `backend/handlers/complete_handler.py` | PK を `USER#{user_id}` に変更、バリデーション追加 |
+| `backend/handlers/gate_handler.py` | `user_id` ベースで進捗を取得 |
+
+### セキュリティ上の注意
+
+- `user_id` はクエリパラメーターで渡すだけなので、URLを知っていれば誰でもなりすまし可能
+- MVP段階ではこれで十分だが、本番運用時は以下を検討:
+  - 外部システムで署名付きトークン (HMAC / JWT) を生成し、AI Levels側で検証
+  - トークンに有効期限を設定し、リプレイ攻撃を防止
