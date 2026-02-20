@@ -61,7 +61,7 @@ class TestInvokeClaudeRegionAndModel:
             assert body["system"] == "my system prompt"
             assert body["messages"] == [{"role": "user", "content": [{"type": "text", "text": "my user prompt"}]}]
             assert body["anthropic_version"] == "bedrock-2023-05-31"
-            assert body["max_tokens"] == 4096
+            assert body["max_tokens"] == 2048
 
 
 class TestRetryLogic:

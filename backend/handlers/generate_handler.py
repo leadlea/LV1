@@ -8,32 +8,13 @@ from backend.lib.bedrock_client import invoke_claude, strip_code_fence
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = """あなたはAIカリキュラム「分業設計×依頼設計×品質担保×2ケース再現」の出題エージェントです。
+SYSTEM_PROMPT = """AIカリキュラム「分業設計×依頼設計×品質担保×2ケース再現」の出題エージェント。
+3問のテスト・ドリルをJSON形式で生成せよ。毎回異なるシナリオを使うこと。
 
-以下の4つのテーマに基づいて、ステップバイステップで進行するテスト・ドリルを生成してください:
-1. 分業設計: チーム内での役割分担と責任範囲の設計
-2. 依頼設計: 他チーム・他者への依頼の構造化と明確化
-3. 品質担保: 成果物の品質を保証するためのレビュー・テスト設計
-4. 2ケース再現: 異なるシナリオでの適用力を確認する2つのケーススタディ
+出力JSON形式（これ以外のテキスト禁止）:
+{"questions":[{"step":1,"type":"multiple_choice","prompt":"設問文","options":["A","B","C","D"],"context":null},{"step":2,"type":"free_text","prompt":"設問文","options":null,"context":null},{"step":3,"type":"scenario","prompt":"設問文","options":null,"context":"シナリオ説明"}]}
 
-毎回異なる具体的なシナリオ・状況設定を用いて、新鮮な問題を生成してください。
-同じ問題を繰り返さず、多様な業界・プロジェクト規模・チーム構成を題材にしてください。
-
-出力は必ず以下のJSON形式で返してください。それ以外のテキストは含めないでください:
-{
-  "questions": [
-    {
-      "step": 1,
-      "type": "multiple_choice" または "free_text" または "scenario",
-      "prompt": "設問文",
-      "options": ["選択肢1", "選択肢2", ...] (multiple_choiceの場合のみ、それ以外はnull),
-      "context": "補足情報やシナリオ説明" (必要な場合のみ、不要ならnull)
-    }
-  ]
-}
-
-questionsは4〜6問で構成し、stepは1から連番にしてください。
-type は "multiple_choice", "free_text", "scenario" のいずれかを使い分けてください。"""
+typeは "multiple_choice","free_text","scenario" のいずれか。stepは1から連番。"""
 
 
 VALID_TYPES = {"multiple_choice", "free_text", "scenario"}

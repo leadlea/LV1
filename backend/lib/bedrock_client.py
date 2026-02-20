@@ -48,7 +48,7 @@ def invoke_claude(system_prompt: str, user_prompt: str) -> dict:
 
     body = json.dumps({
         "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": 4096,
+        "max_tokens": 2048,
         "temperature": 0.7,
         "system": system_prompt,
         "messages": [{"role": "user", "content": [{"type": "text", "text": user_prompt}]}],
