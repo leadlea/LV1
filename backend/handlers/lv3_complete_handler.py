@@ -32,6 +32,12 @@ def _validate_body(body: dict) -> str | None:
     if not isinstance(session_id, str) or not UUID_V4_PATTERN.match(session_id):
         return "session_id must be a valid UUID v4"
 
+    # Optional lv1_session_id validation
+    lv1_session_id = body.get("lv1_session_id")
+    if lv1_session_id is not None:
+        if not isinstance(lv1_session_id, str) or not UUID_V4_PATTERN.match(lv1_session_id):
+            return "lv1_session_id must be a valid UUID v4"
+
     if not isinstance(body["questions"], list) or len(body["questions"]) == 0:
         return "questions must be a non-empty list"
 
@@ -74,7 +80,7 @@ def _save_result(dynamodb, session_id: str, body: dict, completed_at: str) -> No
     })
 
 
-def _update_progress(dynamodb, session_id: str, final_passed: bool, updated_at: str):
+def _update_progress(dynamodb, session_id: str, final_passed: bool, updated_at: str, lv1_session_id: str = None):
     """Update the lv3_passed flag while preserving existing progress."""
     table = dynamodb.Table(PROGRESS_TABLE)
     # Get existing record to preserve lv1_passed and lv2_passed
@@ -87,9 +93,24 @@ def _update_progress(dynamodb, session_id: str, final_passed: bool, updated_at: 
         "lv1_passed": existing.get("lv1_passed", False),
         "lv2_passed": existing.get("lv2_passed", False),
         "lv3_passed": final_passed,
-        "lv4_passed": False,
+        "lv4_passed": existing.get("lv4_passed", False),
         "updated_at": updated_at,
     })
+
+    # Update LV1 session progress if lv1_session_id is provided
+    if lv1_session_id is not None:
+        lv1_resp = table.get_item(Key={"PK": f"SESSION#{lv1_session_id}", "SK": "PROGRESS"})
+        lv1_existing = lv1_resp.get("Item", {})
+        table.put_item(Item={
+            "PK": f"SESSION#{lv1_session_id}",
+            "SK": "PROGRESS",
+            "session_id": lv1_session_id,
+            "lv1_passed": lv1_existing.get("lv1_passed", False),
+            "lv2_passed": lv1_existing.get("lv2_passed", False),
+            "lv3_passed": final_passed,
+            "lv4_passed": lv1_existing.get("lv4_passed", False),
+            "updated_at": updated_at,
+        })
 
 
 def handler(event, context):
@@ -112,12 +133,13 @@ def handler(event, context):
         }
 
     session_id = body["session_id"]
+    lv1_session_id = body.get("lv1_session_id")
     now = datetime.now(timezone.utc).isoformat()
 
     try:
         dynamodb = _get_dynamodb_resource()
         _save_result(dynamodb, session_id, body, now)
-        _update_progress(dynamodb, session_id, body["final_passed"], now)
+        _update_progress(dynamodb, session_id, body["final_passed"], now, lv1_session_id=lv1_session_id)
     except ClientError as e:
         logger.error("DynamoDB write failed: %s", str(e))
         return {

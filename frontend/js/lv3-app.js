@@ -259,15 +259,24 @@ const Lv3App = (() => {
 
     const allPassed = session.grades.every((g) => g.passed);
 
+    // LV1セッションIDを取得（ゲートハンドラーが参照するプログレスレコード用）
+    let lv1SessionId = null;
+    try {
+      const raw = sessionStorage.getItem(LV1_SESSION_KEY);
+      if (raw) lv1SessionId = JSON.parse(raw).session_id;
+    } catch { /* ignore */ }
+
     try {
       ApiClient.hideError();
-      await ApiClient.lv3Complete({
+      const body = {
         session_id: session.session_id,
         questions: session.questions,
         answers: session.answers,
         grades: session.grades,
         final_passed: allPassed,
-      });
+      };
+      if (lv1SessionId) body.lv1_session_id = lv1SessionId;
+      await ApiClient.lv3Complete(body);
     } catch (err) {
       ApiClient.showError("結果の保存に失敗しました。リトライボタンで再試行できます。", () => completeSession());
     }
