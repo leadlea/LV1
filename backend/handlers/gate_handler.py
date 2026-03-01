@@ -24,12 +24,12 @@ def _get_dynamodb_resource():
     return boto3.resource("dynamodb", region_name="ap-northeast-1")
 
 
-def _build_levels(lv1_passed: bool) -> dict:
+def _build_levels(lv1_passed: bool, lv2_passed: bool) -> dict:
     """Build the levels status dict based on progress."""
     return {
         "lv1": {"unlocked": True, "passed": lv1_passed},
-        "lv2": {"unlocked": lv1_passed, "passed": False},
-        "lv3": {"unlocked": False, "passed": False},
+        "lv2": {"unlocked": lv1_passed, "passed": lv2_passed},
+        "lv3": {"unlocked": lv2_passed, "passed": False},
         "lv4": {"unlocked": False, "passed": False},
     }
 
@@ -60,9 +60,10 @@ def handler(event, context):
 
     item = resp.get("Item")
     lv1_passed = item.get("lv1_passed", False) if item else False
+    lv2_passed = item.get("lv2_passed", False) if item else False
 
     return {
         "statusCode": 200,
         "headers": CORS_HEADERS,
-        "body": json.dumps({"levels": _build_levels(lv1_passed)}),
+        "body": json.dumps({"levels": _build_levels(lv1_passed, lv2_passed)}),
     }

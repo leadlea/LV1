@@ -17,18 +17,31 @@ def _api_event(session_id=None):
 
 class TestBuildLevels:
     def test_lv1_not_passed(self):
-        levels = _build_levels(False)
+        levels = _build_levels(False, False)
         assert levels["lv1"] == {"unlocked": True, "passed": False}
         assert levels["lv2"] == {"unlocked": False, "passed": False}
         assert levels["lv3"] == {"unlocked": False, "passed": False}
         assert levels["lv4"] == {"unlocked": False, "passed": False}
 
     def test_lv1_passed(self):
-        levels = _build_levels(True)
+        levels = _build_levels(True, False)
         assert levels["lv1"] == {"unlocked": True, "passed": True}
         assert levels["lv2"] == {"unlocked": True, "passed": False}
         assert levels["lv3"] == {"unlocked": False, "passed": False}
         assert levels["lv4"] == {"unlocked": False, "passed": False}
+
+    def test_lv2_passed_unlocks_lv3(self):
+        levels = _build_levels(True, True)
+        assert levels["lv1"] == {"unlocked": True, "passed": True}
+        assert levels["lv2"] == {"unlocked": True, "passed": True}
+        assert levels["lv3"] == {"unlocked": True, "passed": False}
+        assert levels["lv4"] == {"unlocked": False, "passed": False}
+
+    def test_lv2_passed_without_lv1_keeps_lv2_locked(self):
+        levels = _build_levels(False, True)
+        assert levels["lv2"]["unlocked"] is False
+        assert levels["lv2"]["passed"] is True
+        assert levels["lv3"]["unlocked"] is True
 
 
 class TestHandler:
@@ -55,12 +68,14 @@ class TestHandler:
     @patch("backend.handlers.gate_handler._get_dynamodb_resource")
     def test_returns_lv2_unlocked_when_lv1_passed(self, mock_ddb):
         mock_table = MagicMock()
-        mock_table.get_item.return_value = {"Item": {"lv1_passed": True}}
+        mock_table.get_item.return_value = {"Item": {"lv1_passed": True, "lv2_passed": False}}
         mock_ddb.return_value.Table.return_value = mock_table
 
         resp = handler(_api_event(VALID_SESSION_ID), None)
         data = json.loads(resp["body"])
         assert data["levels"]["lv2"]["unlocked"] is True
+        assert data["levels"]["lv2"]["passed"] is False
+        assert data["levels"]["lv3"]["unlocked"] is False
 
     @patch("backend.handlers.gate_handler._get_dynamodb_resource")
     def test_returns_500_on_dynamodb_error(self, mock_ddb):

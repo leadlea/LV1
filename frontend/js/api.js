@@ -114,5 +114,44 @@ const ApiClient = (() => {
     if (banner) banner.hidden = true;
   }
 
-  return { generate, grade, complete, getLevelsStatus, showError, hideError };
+  /**
+   * POST /lv2/generate - Lv2ケーススタディ生成
+   * @param {string} sessionId
+   * @returns {Promise<{session_id: string, questions: Array}>}
+   */
+  function lv2Generate(sessionId) {
+    return request("/lv2/generate", {
+      method: "POST",
+      body: JSON.stringify({ session_id: sessionId }),
+    });
+  }
+
+  /**
+   * POST /lv2/grade - Lv2回答採点+レビュー
+   * @param {string} sessionId
+   * @param {number} step
+   * @param {object} question
+   * @param {string} answer
+   * @returns {Promise<{session_id: string, step: number, passed: boolean, score: number, feedback: string, explanation: string}>}
+   */
+  function lv2Grade(sessionId, step, question, answer) {
+    return request("/lv2/grade", {
+      method: "POST",
+      body: JSON.stringify({ session_id: sessionId, step, question, answer }),
+    });
+  }
+
+  /**
+   * POST /lv2/complete - Lv2完了レコード保存
+   * @param {object} payload - { session_id, questions, answers, grades, final_passed }
+   * @returns {Promise<{saved: boolean, record_id: string}>}
+   */
+  function lv2Complete(payload) {
+    return request("/lv2/complete", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  return { generate, grade, complete, getLevelsStatus, lv2Generate, lv2Grade, lv2Complete, showError, hideError };
 })();

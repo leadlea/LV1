@@ -60,6 +60,28 @@ functions:
           method: get
           cors: true
 
+  lv2Generate:
+    handler: backend/handlers/lv2_generate_handler.handler
+    events:
+      - http:
+          path: lv2/generate
+          method: post
+          cors: true
+  lv2Grade:
+    handler: backend/handlers/lv2_grade_handler.handler
+    events:
+      - http:
+          path: lv2/grade
+          method: post
+          cors: true
+  lv2Complete:
+    handler: backend/handlers/lv2_complete_handler.handler
+    events:
+      - http:
+          path: lv2/complete
+          method: post
+          cors: true
+
 resources:
   Resources:
     ResultsTable:

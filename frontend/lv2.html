@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Levels - Lv2 カリキュラム</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1><a href="index.html" class="header__link">AI Levels</a></h1>
+      <p class="subtitle">Lv2: 業務プロセス設計×AI実行指示×成果物検証×改善サイクル</p>
+    </header>
+
+    <!-- ステップ進捗バー -->
+    <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+      <div class="progress-bar__fill" id="progress-fill"></div>
+      <span class="progress-bar__label" id="progress-label">準備中...</span>
+    </div>
+
+    <!-- 4ステップ進行状況 -->
+    <div class="lv2-steps" id="lv2-steps">
+      <div class="lv2-steps__item" data-step="1">
+        <span class="lv2-steps__num">1</span>
+        <span class="lv2-steps__name">業務プロセス設計</span>
+      </div>
+      <div class="lv2-steps__item" data-step="2">
+        <span class="lv2-steps__num">2</span>
+        <span class="lv2-steps__name">AI実行指示</span>
+      </div>
+      <div class="lv2-steps__item" data-step="3">
+        <span class="lv2-steps__num">3</span>
+        <span class="lv2-steps__name">成果物検証</span>
+      </div>
+      <div class="lv2-steps__item" data-step="4">
+        <span class="lv2-steps__num">4</span>
+        <span class="lv2-steps__name">改善サイクル</span>
+      </div>
+    </div>
+
+    <main class="lv1-main">
+      <!-- 読み込み中 -->
+      <section class="lv1-section" id="section-loading">
+        <div class="spinner" aria-label="読み込み中"></div>
+        <p class="lv2-loading-text">ケーススタディを生成しています...</p>
+      </section>
+
+      <!-- 設問表示 + 回答入力 -->
+      <section class="lv1-section" id="section-question" hidden>
+        <div class="question-card">
+          <div class="question-card__header">
+            <span class="question-card__step" id="question-step"></span>
+            <span class="question-card__type" id="question-type"></span>
+          </div>
+          <div class="question-card__context lv2-context" id="question-context" hidden></div>
+          <p class="question-card__prompt" id="question-prompt"></p>
+
+          <!-- 自由記述（scenario / free_text用） -->
+          <div class="question-card__textarea-wrap" id="textarea-wrap">
+            <label for="answer-text" class="sr-only">回答を入力</label>
+            <textarea id="answer-text" class="question-card__textarea lv2-textarea" rows="10" placeholder="回答を入力してください..."></textarea>
+            <div class="lv2-char-count" id="char-count">0 文字</div>
+          </div>
+
+          <button class="btn btn--primary" id="btn-submit" disabled>回答を送信</button>
+        </div>
+      </section>
+
+      <!-- 採点結果 + フィードバック -->
+      <section class="lv1-section" id="section-result" hidden>
+        <div class="result-card">
+          <div class="result-card__verdict" id="result-verdict"></div>
+          <div class="result-card__score" id="result-score"></div>
+          <div class="result-card__feedback">
+            <h3>フィードバック</h3>
+            <p id="result-feedback"></p>
+          </div>
+          <div class="result-card__explanation">
+            <h3>解説</h3>
+            <p id="result-explanation"></p>
+          </div>
+          <button class="btn btn--primary" id="btn-next">次のステップへ</button>
+        </div>
+      </section>
+
+      <!-- 最終結果 -->
+      <section class="lv1-section" id="section-final" hidden>
+        <div class="final-card">
+          <div class="final-card__icon" id="final-icon"></div>
+          <h2 class="final-card__title" id="final-title"></h2>
+          <p class="final-card__message" id="final-message"></p>
+          <div class="final-card__summary" id="final-summary"></div>
+          <a href="index.html" class="btn btn--primary">レベル選択に戻る</a>
+        </div>
+      </section>
+    </main>
+
+    <!-- エラーバナー -->
+    <div class="error-banner" id="error-banner" hidden>
+      <p id="error-message"></p>
+      <button id="error-retry-btn" class="btn btn--retry">リトライ</button>
+    </div>
+  </div>
+
+  <style>
+    /* Lv2 step indicators */
+    .lv2-steps {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .lv2-steps__item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.8rem;
+      background: #e0e0e0;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      color: #666;
+      transition: background 0.2s, color 0.2s;
+    }
+    .lv2-steps__item--active {
+      background: #4361ee;
+      color: #fff;
+    }
+    .lv2-steps__item--done {
+      background: #2ecc71;
+      color: #fff;
+    }
+    .lv2-steps__num {
+      font-weight: 700;
+    }
+    /* Lv2 expanded context area */
+    .lv2-context {
+      min-height: 80px;
+      font-size: 0.95rem;
+      line-height: 1.8;
+    }
+    /* Lv2 expanded textarea */
+    .lv2-textarea {
+      min-height: 180px;
+    }
+    .lv2-char-count {
+      text-align: right;
+      font-size: 0.8rem;
+      color: #999;
+      margin-top: 0.3rem;
+    }
+    @media (max-width: 600px) {
+      .lv2-steps { gap: 0.3rem; }
+      .lv2-steps__item { font-size: 0.7rem; padding: 0.3rem 0.6rem; }
+      .lv2-textarea { min-height: 140px; }
+    }
+  </style>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/lv2-app.js"></script>
+</body>
+</html>
