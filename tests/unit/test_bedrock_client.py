@@ -35,7 +35,10 @@ class TestInvokeClaudeRegionAndModel:
 
             invoke_claude("sys", "user")
 
-            mock_boto3.client.assert_called_once_with("bedrock-runtime", region_name="ap-northeast-1")
+            mock_boto3.client.assert_called_once()
+            call_kwargs = mock_boto3.client.call_args
+            assert call_kwargs[0][0] == "bedrock-runtime"
+            assert call_kwargs[1]["region_name"] == "ap-northeast-1"
 
     def test_calls_invoke_model_with_correct_model_id(self):
         with patch("backend.lib.bedrock_client.boto3") as mock_boto3:

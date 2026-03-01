@@ -4,6 +4,7 @@ import time
 import logging
 
 import boto3
+from botocore.config import Config as BotoConfig
 from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
@@ -45,12 +46,16 @@ def invoke_claude(system_prompt: str, user_prompt: str, max_tokens: int = 2048) 
     Raises:
         ClientError: リトライ上限超過後のBedrock呼び出しエラー
     """
-    client = boto3.client("bedrock-runtime", region_name=REGION)
+    client = boto3.client(
+        "bedrock-runtime",
+        region_name=REGION,
+        config=BotoConfig(read_timeout=25, connect_timeout=5),
+    )
 
     body = json.dumps({
         "anthropic_version": "bedrock-2023-05-31",
         "max_tokens": max_tokens,
-        "temperature": 0.7,
+        "temperature": 0.4,
         "system": system_prompt,
         "messages": [{"role": "user", "content": [{"type": "text", "text": user_prompt}]}],
     })

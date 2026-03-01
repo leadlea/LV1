@@ -200,27 +200,38 @@ const Lv2App = (() => {
     }
 
     showSection("loading");
-    try {
-      ApiClient.hideError();
-      const data = await ApiClient.lv2Generate(session.session_id);
-      session.questions = data.questions || [];
-      session.current_step = 0;
-      saveSession(session);
+    const MAX_GENERATE_RETRIES = 2;
+    let lastErr = null;
+    for (let attempt = 0; attempt < MAX_GENERATE_RETRIES; attempt++) {
+      try {
+        ApiClient.hideError();
+        const data = await ApiClient.lv2Generate(session.session_id);
+        session.questions = data.questions || [];
+        session.current_step = 0;
+        saveSession(session);
 
-      if (session.questions.length === 0) {
-        ApiClient.showError("設問の生成に失敗しました。", () => start());
+        if (session.questions.length === 0) {
+          ApiClient.showError("設問の生成に失敗しました。", () => start());
+          return;
+        }
+        renderQuestion(session.questions[0], 0, session.questions.length);
         return;
+      } catch (err) {
+        lastErr = err;
+        // Only auto-retry on network errors (no status = timeout/network failure)
+        if (err.status || attempt >= MAX_GENERATE_RETRIES - 1) break;
+        // Wait briefly before retry
+        await new Promise(r => setTimeout(r, 1000));
       }
-      renderQuestion(session.questions[0], 0, session.questions.length);
-    } catch (err) {
-      showSection("question");
-      if (err.status && err.status >= 500) {
-        ApiClient.showError("サーバーエラーが発生しました。しばらく待ってからリトライしてください。", () => start());
-      } else if (err.status) {
-        ApiClient.showError("ケーススタディの生成に失敗しました。(" + err.status + ")", () => start());
-      } else {
-        ApiClient.showError("ネットワーク接続を確認してください。", () => start());
-      }
+    }
+    // All retries exhausted
+    showSection("question");
+    if (lastErr.status && lastErr.status >= 500) {
+      ApiClient.showError("サーバーエラーが発生しました。しばらく待ってからリトライしてください。", () => start());
+    } else if (lastErr.status) {
+      ApiClient.showError("ケーススタディの生成に失敗しました。(" + lastErr.status + ")", () => start());
+    } else {
+      ApiClient.showError("ケーススタディの生成に時間がかかっています。リトライしてください。", () => start());
     }
   }
 
