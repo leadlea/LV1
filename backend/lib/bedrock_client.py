@@ -31,7 +31,7 @@ def strip_code_fence(text: str) -> str:
     return text.strip()
 
 
-def invoke_claude(system_prompt: str, user_prompt: str, max_tokens: int = 2048, model_id: str | None = None) -> dict:
+def invoke_claude(system_prompt: str, user_prompt: str, max_tokens: int = 2048, model_id: str | None = None, temperature: float = 0.4) -> dict:
     """
     Bedrock RuntimeでClaudeを呼び出す共通関数。
 
@@ -40,6 +40,7 @@ def invoke_claude(system_prompt: str, user_prompt: str, max_tokens: int = 2048, 
         user_prompt: ユーザープロンプト
         max_tokens: 最大出力トークン数（デフォルト: 2048）
         model_id: 使用するモデルID（デフォルト: MODEL_ID）
+        temperature: 生成温度（デフォルト: 0.4）
 
     Returns:
         Bedrockレスポンスをパースしたdict
@@ -57,7 +58,7 @@ def invoke_claude(system_prompt: str, user_prompt: str, max_tokens: int = 2048, 
     body = json.dumps({
         "anthropic_version": "bedrock-2023-05-31",
         "max_tokens": max_tokens,
-        "temperature": 0.4,
+        "temperature": temperature,
         "system": system_prompt,
         "messages": [{"role": "user", "content": [{"type": "text", "text": user_prompt}]}],
     })
