@@ -5,6 +5,7 @@ import logging
 
 from backend.lib.bedrock_client import invoke_claude, strip_code_fence
 from backend.lib.lv2_reviewer import generate_lv2_feedback
+from backend.lib.threshold_resolver import resolve_passed
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +99,7 @@ def handler(event, context):
         # 1. 採点実行
         grade_raw = invoke_claude(LV2_GRADE_SYSTEM_PROMPT, user_prompt)
         grade_result = _parse_grade_result(grade_raw)
+        grade_result["passed"] = resolve_passed(level=2, score=grade_result["score"])
 
         # 2. レビュー（フィードバック・解説）生成
         review = generate_lv2_feedback(question, answer, grade_result)
