@@ -49,7 +49,7 @@ class TestInvokeClaudeRegionAndModel:
             invoke_claude("sys", "user")
 
             call_kwargs = mock_client.invoke_model.call_args[1]
-            assert call_kwargs["modelId"] == "anthropic.claude-sonnet-4-6"
+            assert call_kwargs["modelId"] == "jp.anthropic.claude-sonnet-4-6"
 
     def test_sends_correct_body_structure(self):
         with patch("backend.lib.bedrock_client.boto3") as mock_boto3:
