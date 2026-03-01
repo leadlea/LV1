@@ -67,6 +67,24 @@ class TestInvokeClaudeRegionAndModel:
             assert body["max_tokens"] == 2048
 
 
+
+
+class TestBotoClientConfig:
+    """Verify boto3 client is created with correct BotoConfig settings."""
+
+    def test_read_timeout_is_55(self):
+        with patch("backend.lib.bedrock_client.boto3") as mock_boto3:
+            mock_client = MagicMock()
+            mock_boto3.client.return_value = mock_client
+            mock_client.invoke_model.return_value = _make_bedrock_response({"ok": True})
+
+            invoke_claude("sys", "user")
+
+            call_kwargs = mock_boto3.client.call_args[1]
+            config = call_kwargs["config"]
+            assert config.read_timeout == 55
+
+
 class TestInvokeClaudeMaxTokens:
     """max_tokens parameterization: default 2048 and custom values."""
 

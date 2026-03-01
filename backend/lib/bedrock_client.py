@@ -51,7 +51,7 @@ def invoke_claude(system_prompt: str, user_prompt: str, max_tokens: int = 2048, 
     client = boto3.client(
         "bedrock-runtime",
         region_name=REGION,
-        config=BotoConfig(read_timeout=28, connect_timeout=5),
+        config=BotoConfig(read_timeout=55, connect_timeout=5),
     )
 
     body = json.dumps({
