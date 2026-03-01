@@ -19,6 +19,10 @@ STEP_TYPE_MAP = {1: "scenario", 2: "free_text", 3: "scenario", 4: "free_text", 5
 
 def _parse_questions(result: dict) -> list[dict]:
     """Bedrockレスポンスからquestionsを抽出しバリデーションする。"""
+    stop_reason = result.get("stop_reason")
+    if stop_reason == "max_tokens":
+        logger.warning("Bedrock response was truncated due to max_tokens limit")
+
     text = result.get("content", [{}])[0].get("text", "")
     text = strip_code_fence(text)
 
@@ -91,7 +95,7 @@ def handler(event, context):
     user_prompt = f"セッションID: {session_id}\n新しい組織横断ガバナンスシナリオを生成してください。"
 
     try:
-        result = invoke_claude(LV4_GENERATE_SYSTEM_PROMPT, user_prompt, model_id=FAST_MODEL_ID)
+        result = invoke_claude(LV4_GENERATE_SYSTEM_PROMPT, user_prompt, max_tokens=4096, model_id=FAST_MODEL_ID)
         questions = _parse_questions(result)
     except (ValueError, Exception) as e:
         logger.error("Failed to generate Lv4 questions: %s", str(e))
