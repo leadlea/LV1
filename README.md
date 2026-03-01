@@ -17,9 +17,18 @@ graph TB
     subgraph "バックエンド API"
         APIGW[API Gateway REST]
         subgraph "Lambda - Python 3.12"
-            Gen[出題 Lambda<br/>POST /lv1/generate]
-            Grade[採点+レビュー Lambda<br/>POST /lv1/grade]
-            Complete[完了保存 Lambda<br/>POST /lv1/complete]
+            Gen1[出題 Lambda<br/>POST /lv1/generate]
+            Grade1[採点+レビュー Lambda<br/>POST /lv1/grade]
+            Complete1[完了保存 Lambda<br/>POST /lv1/complete]
+            Gen2[出題 Lambda<br/>POST /lv2/generate]
+            Grade2[採点+レビュー Lambda<br/>POST /lv2/grade]
+            Complete2[完了保存 Lambda<br/>POST /lv2/complete]
+            Gen3[出題 Lambda<br/>POST /lv3/generate]
+            Grade3[採点+レビュー Lambda<br/>POST /lv3/grade]
+            Complete3[完了保存 Lambda<br/>POST /lv3/complete]
+            Gen4[出題 Lambda<br/>POST /lv4/generate]
+            Grade4[採点+レビュー Lambda<br/>POST /lv4/grade]
+            Complete4[完了保存 Lambda<br/>POST /lv4/complete]
             Gate[ゲーティング Lambda<br/>GET /levels/status]
         end
     end
@@ -32,14 +41,14 @@ graph TB
 
     Browser --> CF --> S3
     Browser -->|REST API| APIGW
-    APIGW --> Gen
-    APIGW --> Grade
-    APIGW --> Complete
+    APIGW --> Gen1 & Gen2 & Gen3 & Gen4
+    APIGW --> Grade1 & Grade2 & Grade3 & Grade4
+    APIGW --> Complete1 & Complete2 & Complete3 & Complete4
     APIGW --> Gate
-    Gen --> Bedrock
-    Grade --> Bedrock
-    Complete --> DDB_R
-    Complete --> DDB_P
+    Gen1 & Gen2 & Gen3 & Gen4 --> Bedrock
+    Grade1 & Grade2 & Grade3 & Grade4 --> Bedrock
+    Complete1 & Complete2 & Complete3 & Complete4 --> DDB_R
+    Complete1 & Complete2 & Complete3 & Complete4 --> DDB_P
     Gate --> DDB_P
 ```
 
@@ -52,12 +61,13 @@ sequenceDiagram
     participant API as API Gateway
     participant TG as 出題エージェント
     participant G as 採点エージェント
+    participant TR as ThresholdResolver
     participant R as レビューエージェント
     participant BR as Bedrock Claude Sonnet 4.6
     participant DB as DynamoDB
 
     U->>FE: テスト開始
-    FE->>API: POST /lv1/generate
+    FE->>API: POST /lvN/generate
     API->>TG: 出題リクエスト
     TG->>BR: プロンプト送信
     BR-->>TG: 3問のテスト生成
@@ -65,10 +75,12 @@ sequenceDiagram
 
     loop 各設問 (step 1〜3)
         U->>FE: 回答入力・送信
-        FE->>API: POST /lv1/grade
+        FE->>API: POST /lvN/grade
         API->>G: 採点リクエスト
         G->>BR: 採点プロンプト
         BR-->>G: passed + score
+        G->>TR: resolve_passed(level, score)
+        TR-->>G: passed (閾値ベース)
         G->>R: レビュー依頼
         R->>BR: フィードバック生成
         BR-->>R: feedback + explanation
@@ -77,7 +89,7 @@ sequenceDiagram
         FE->>U: スコア・フィードバック表示
     end
 
-    FE->>API: POST /lv1/complete
+    FE->>API: POST /lvN/complete
     API->>DB: 結果保存 (results)
     API->>DB: 進捗更新 (progress)
     DB-->>FE: saved: true
@@ -90,13 +102,13 @@ graph LR
     subgraph "レベル進行"
         LV1[LV1<br/>常時アンロック]
         LV2[LV2<br/>LV1合格で解放]
-        LV3[LV3<br/>未実装]
-        LV4[LV4<br/>未実装]
+        LV3[LV3<br/>LV2合格で解放]
+        LV4[LV4<br/>LV3合格で解放]
     end
 
     LV1 -->|lv1_passed = true| LV2
-    LV2 -.->|将来実装| LV3
-    LV3 -.->|将来実装| LV4
+    LV2 -->|lv2_passed = true| LV3
+    LV3 -->|lv3_passed = true| LV4
 
     subgraph "進捗管理"
         GATE[GET /levels/status]
@@ -104,7 +116,7 @@ graph LR
     end
 
     GATE --> PROG
-    PROG -->|lv1_passed| LV2
+    PROG -->|lvN_passed| LV2 & LV3 & LV4
 ```
 
 ## 技術スタック
@@ -131,30 +143,48 @@ API Gatewayのハードリミットは29秒。Claude Opus 4.6では1リクエス
 .
 ├── backend/
 │   ├── handlers/
-│   │   ├── generate_handler.py   # 出題エージェント
-│   │   ├── grade_handler.py      # 採点エージェント + レビュー呼出
-│   │   ├── complete_handler.py   # 完了保存
-│   │   └── gate_handler.py       # ゲーティング
+│   │   ├── generate_handler.py      # LV1 出題エージェント
+│   │   ├── grade_handler.py         # LV1 採点エージェント + レビュー呼出
+│   │   ├── complete_handler.py      # LV1 完了保存
+│   │   ├── lv2_generate_handler.py  # LV2 出題エージェント
+│   │   ├── lv2_grade_handler.py     # LV2 採点エージェント + レビュー呼出
+│   │   ├── lv2_complete_handler.py  # LV2 完了保存
+│   │   ├── lv3_generate_handler.py  # LV3 出題エージェント
+│   │   ├── lv3_grade_handler.py     # LV3 採点エージェント + レビュー呼出
+│   │   ├── lv3_complete_handler.py  # LV3 完了保存
+│   │   ├── lv4_generate_handler.py  # LV4 出題エージェント
+│   │   ├── lv4_grade_handler.py     # LV4 採点エージェント + レビュー呼出
+│   │   ├── lv4_complete_handler.py  # LV4 完了保存
+│   │   └── gate_handler.py          # ゲーティング
 │   └── lib/
-│       ├── bedrock_client.py     # Bedrock共通クライアント (リトライ付き)
-│       ├── reviewer.py           # レビューエージェント
-│       └── threshold_resolver.py # 合格閾値リゾルバ (環境変数ベース)
+│       ├── bedrock_client.py        # Bedrock共通クライアント (リトライ付き)
+│       ├── reviewer.py              # LV1 レビューエージェント
+│       ├── lv2_reviewer.py          # LV2 レビューエージェント
+│       ├── lv3_reviewer.py          # LV3 レビューエージェント
+│       ├── lv4_reviewer.py          # LV4 レビューエージェント
+│       └── threshold_resolver.py    # 合格閾値リゾルバ (環境変数ベース)
 ├── frontend/
-│   ├── index.html                # トップページ
-│   ├── lv1.html                  # LV1テスト画面
+│   ├── index.html                   # トップページ
+│   ├── lv1.html                     # LV1テスト画面
+│   ├── lv2.html                     # LV2テスト画面
+│   ├── lv3.html                     # LV3テスト画面
+│   ├── lv4.html                     # LV4テスト画面
 │   ├── favicon.ico
 │   ├── css/style.css
 │   └── js/
-│       ├── config.js             # API Base URL設定
-│       ├── api.js                # API通信層
-│       ├── app.js                # LV1アプリロジック
-│       └── gate.js               # ゲーティングUI
+│       ├── config.js                # API Base URL設定
+│       ├── api.js                   # API通信層
+│       ├── app.js                   # LV1アプリロジック
+│       ├── lv2-app.js               # LV2アプリロジック
+│       ├── lv3-app.js               # LV3アプリロジック
+│       ├── lv4-app.js               # LV4アプリロジック
+│       └── gate.js                  # ゲーティングUI
 ├── tests/
-│   ├── unit/                     # ユニットテスト (69件)
-│   └── property/                 # プロパティベーステスト (19件)
-├── .github/workflows/deploy.yml  # CI/CDパイプライン
-├── serverless.yml                # インフラ定義
-└── requirements.txt              # Python依存
+│   ├── unit/                        # ユニットテスト (69件)
+│   └── property/                    # プロパティベーステスト (19件)
+├── .github/workflows/deploy.yml     # CI/CDパイプライン
+├── serverless.yml                   # インフラ定義
+└── requirements.txt                 # Python依存
 ```
 
 ## 設計上の特徴
