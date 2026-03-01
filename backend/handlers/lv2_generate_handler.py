@@ -7,6 +7,8 @@ from backend.lib.bedrock_client import invoke_claude, strip_code_fence
 
 logger = logging.getLogger(__name__)
 
+FAST_MODEL_ID = "jp.anthropic.claude-sonnet-4-5-20250929-v1:0"
+
 LV2_GENERATE_SYSTEM_PROMPT = """業務AI活用ケーススタディ出題。同一シナリオで4問生成。毎回異なるシナリオ。
 step1:scenario(業務プロセス設計) step2:free_text(AI実行指示) step3:scenario(成果物検証) step4:free_text(改善サイクル)
 JSON出力のみ:{"questions":[{"step":1,"type":"scenario","prompt":"設問","options":null,"context":"説明"},{"step":2,"type":"free_text","prompt":"設問","options":null,"context":"説明"},{"step":3,"type":"scenario","prompt":"設問","options":null,"context":"説明"},{"step":4,"type":"free_text","prompt":"設問","options":null,"context":"説明"}]}"""
@@ -91,7 +93,7 @@ def handler(event, context):
     user_prompt = f"セッションID: {session_id}\n新しいケーススタディを生成してください。"
 
     try:
-        result = invoke_claude(LV2_GENERATE_SYSTEM_PROMPT, user_prompt, max_tokens=3000)
+        result = invoke_claude(LV2_GENERATE_SYSTEM_PROMPT, user_prompt, max_tokens=3000, model_id=FAST_MODEL_ID)
         questions = _parse_questions(result)
     except (ValueError, Exception) as e:
         logger.error("Failed to generate Lv2 questions: %s", str(e))

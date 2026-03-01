@@ -7,6 +7,8 @@ from backend.lib.bedrock_client import invoke_claude, strip_code_fence
 
 logger = logging.getLogger(__name__)
 
+FAST_MODEL_ID = "jp.anthropic.claude-sonnet-4-5-20250929-v1:0"
+
 LV3_GENERATE_SYSTEM_PROMPT = """AI導入プロジェクトリーダーシップの出題。同一組織シナリオで5問生成。毎回異なるシナリオ。
 step1:scenario(プロジェクト計画策定) step2:free_text(AI活用ロードマップ) step3:scenario(AI導入計画立案) step4:scenario(スキル育成計画) step5:free_text(ROI評価改善)
 JSON出力のみ:{"questions":[{"step":1,"type":"scenario","prompt":"設問","options":null,"context":"説明"},{"step":2,"type":"free_text","prompt":"設問","options":null,"context":"説明"},{"step":3,"type":"scenario","prompt":"設問","options":null,"context":"説明"},{"step":4,"type":"scenario","prompt":"設問","options":null,"context":"説明"},{"step":5,"type":"free_text","prompt":"設問","options":null,"context":"説明"}]}"""
@@ -90,7 +92,7 @@ def handler(event, context):
     user_prompt = f"セッションID: {session_id}\n新しいプロジェクトリーダーシップシナリオを生成してください。"
 
     try:
-        result = invoke_claude(LV3_GENERATE_SYSTEM_PROMPT, user_prompt)
+        result = invoke_claude(LV3_GENERATE_SYSTEM_PROMPT, user_prompt, model_id=FAST_MODEL_ID)
         questions = _parse_questions(result)
     except (ValueError, Exception) as e:
         logger.error("Failed to generate Lv3 questions: %s", str(e))

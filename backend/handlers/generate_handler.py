@@ -8,6 +8,8 @@ from backend.lib.bedrock_client import invoke_claude, strip_code_fence
 
 logger = logging.getLogger(__name__)
 
+FAST_MODEL_ID = "jp.anthropic.claude-sonnet-4-5-20250929-v1:0"
+
 SYSTEM_PROMPT = """AIカリキュラム「分業設計×依頼設計×品質担保×2ケース再現」の出題エージェント。
 3問のテスト・ドリルをJSON形式で生成せよ。毎回異なるシナリオを使うこと。
 
@@ -82,7 +84,7 @@ def handler(event, context):
     user_prompt = f"セッションID: {session_id}\n新しいテスト・ドリルを生成してください。"
 
     try:
-        result = invoke_claude(SYSTEM_PROMPT, user_prompt)
+        result = invoke_claude(SYSTEM_PROMPT, user_prompt, model_id=FAST_MODEL_ID)
         questions = _parse_questions(result)
     except (ValueError, Exception) as e:
         logger.error("Failed to generate questions: %s", str(e))

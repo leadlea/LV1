@@ -7,6 +7,8 @@ from backend.lib.bedrock_client import invoke_claude, strip_code_fence
 
 logger = logging.getLogger(__name__)
 
+FAST_MODEL_ID = "jp.anthropic.claude-sonnet-4-5-20250929-v1:0"
+
 LV4_GENERATE_SYSTEM_PROMPT = """組織横断AI活用ガバナンスの出題。同一組織シナリオで6問生成。毎回異なるシナリオ。
 step1:scenario(AI活用標準化戦略) step2:free_text(ガバナンスフレームワーク) step3:scenario(組織横断推進体制) step4:free_text(AI活用文化醸成) step5:scenario(リスク管理) step6:free_text(中長期ロードマップ)
 JSON出力のみ:{"questions":[{"step":1,"type":"scenario","prompt":"設問","options":null,"context":"説明"},{"step":2,"type":"free_text","prompt":"設問","options":null,"context":"説明"},{"step":3,"type":"scenario","prompt":"設問","options":null,"context":"説明"},{"step":4,"type":"free_text","prompt":"設問","options":null,"context":"説明"},{"step":5,"type":"scenario","prompt":"設問","options":null,"context":"説明"},{"step":6,"type":"free_text","prompt":"設問","options":null,"context":"説明"}]}"""
@@ -89,7 +91,7 @@ def handler(event, context):
     user_prompt = f"セッションID: {session_id}\n新しい組織横断ガバナンスシナリオを生成してください。"
 
     try:
-        result = invoke_claude(LV4_GENERATE_SYSTEM_PROMPT, user_prompt)
+        result = invoke_claude(LV4_GENERATE_SYSTEM_PROMPT, user_prompt, model_id=FAST_MODEL_ID)
         questions = _parse_questions(result)
     except (ValueError, Exception) as e:
         logger.error("Failed to generate Lv4 questions: %s", str(e))

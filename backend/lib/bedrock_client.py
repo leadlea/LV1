@@ -31,14 +31,15 @@ def strip_code_fence(text: str) -> str:
     return text.strip()
 
 
-def invoke_claude(system_prompt: str, user_prompt: str, max_tokens: int = 2048) -> dict:
+def invoke_claude(system_prompt: str, user_prompt: str, max_tokens: int = 2048, model_id: str | None = None) -> dict:
     """
-    Bedrock RuntimeでClaude Opus 4.6を呼び出す共通関数。
+    Bedrock RuntimeでClaudeを呼び出す共通関数。
 
     Args:
         system_prompt: システムプロンプト
         user_prompt: ユーザープロンプト
         max_tokens: 最大出力トークン数（デフォルト: 2048）
+        model_id: 使用するモデルID（デフォルト: MODEL_ID）
 
     Returns:
         Bedrockレスポンスをパースしたdict
@@ -46,6 +47,7 @@ def invoke_claude(system_prompt: str, user_prompt: str, max_tokens: int = 2048) 
     Raises:
         ClientError: リトライ上限超過後のBedrock呼び出しエラー
     """
+    use_model = model_id or MODEL_ID
     client = boto3.client(
         "bedrock-runtime",
         region_name=REGION,
@@ -65,7 +67,7 @@ def invoke_claude(system_prompt: str, user_prompt: str, max_tokens: int = 2048) 
     for attempt in range(MAX_RETRIES):
         try:
             response = client.invoke_model(
-                modelId=MODEL_ID,
+                modelId=use_model,
                 contentType="application/json",
                 accept="application/json",
                 body=body,
