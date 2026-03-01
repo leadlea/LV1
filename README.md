@@ -119,7 +119,7 @@ graph LR
 | DB | DynamoDB (PAY_PER_REQUEST) | results + progress 2テーブル |
 | IaC | Serverless Framework | ローカルv4 / CI v3 |
 | CI/CD | GitHub Actions | main push で自動デプロイ |
-| テスト | pytest + Hypothesis | ユニット57件 + プロパティ13件 |
+| テスト | pytest + Hypothesis | ユニット69件 + プロパティ19件 |
 
 ### なぜ Claude Sonnet 4.6 か
 
@@ -137,7 +137,8 @@ API Gatewayのハードリミットは29秒。Claude Opus 4.6では1リクエス
 │   │   └── gate_handler.py       # ゲーティング
 │   └── lib/
 │       ├── bedrock_client.py     # Bedrock共通クライアント (リトライ付き)
-│       └── reviewer.py           # レビューエージェント
+│       ├── reviewer.py           # レビューエージェント
+│       └── threshold_resolver.py # 合格閾値リゾルバ (環境変数ベース)
 ├── frontend/
 │   ├── index.html                # トップページ
 │   ├── lv1.html                  # LV1テスト画面
@@ -149,8 +150,8 @@ API Gatewayのハードリミットは29秒。Claude Opus 4.6では1リクエス
 │       ├── app.js                # LV1アプリロジック
 │       └── gate.js               # ゲーティングUI
 ├── tests/
-│   ├── unit/                     # ユニットテスト (57件)
-│   └── property/                 # プロパティベーステスト (13件)
+│   ├── unit/                     # ユニットテスト (69件)
+│   └── property/                 # プロパティベーステスト (19件)
 ├── .github/workflows/deploy.yml  # CI/CDパイプライン
 ├── serverless.yml                # インフラ定義
 └── requirements.txt              # Python依存
@@ -163,6 +164,7 @@ API Gatewayのハードリミットは29秒。Claude Opus 4.6では1リクエス
 - **リトライ付きBedrock呼出**: ThrottlingException等に対し指数バックオフで最大3回リトライ
 - **コードフェンス除去**: LLMが ` ```json ``` ` で囲んで返すケースに対応する `strip_code_fence()` を実装
 - **CORS全開放**: `Access-Control-Allow-Origin: *` で全ハンドラ統一
+- **合格閾値の環境変数制御**: 各レベル (LV1〜LV4) の合格閾値を `PASS_THRESHOLD_LV{N}` 環境変数で設定可能。AIが返すスコアに対して閾値ベースで合否を上書きし、コード変更なしで閾値調整が可能（デフォルト: 30）
 - **DynamoDB 2テーブル設計**: results (テスト結果詳細) と progress (レベル進捗) を分離
 
 ## ローカル開発
