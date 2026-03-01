@@ -64,6 +64,34 @@ class TestInvokeClaudeRegionAndModel:
             assert body["max_tokens"] == 2048
 
 
+class TestInvokeClaudeMaxTokens:
+    """max_tokens parameterization: default 2048 and custom values."""
+
+    def test_default_max_tokens_is_2048(self):
+        with patch("backend.lib.bedrock_client.boto3") as mock_boto3:
+            mock_client = MagicMock()
+            mock_boto3.client.return_value = mock_client
+            mock_client.invoke_model.return_value = _make_bedrock_response({"ok": True})
+
+            invoke_claude("sys", "user")
+
+            call_kwargs = mock_client.invoke_model.call_args[1]
+            body = json.loads(call_kwargs["body"])
+            assert body["max_tokens"] == 2048
+
+    def test_custom_max_tokens_is_used(self):
+        with patch("backend.lib.bedrock_client.boto3") as mock_boto3:
+            mock_client = MagicMock()
+            mock_boto3.client.return_value = mock_client
+            mock_client.invoke_model.return_value = _make_bedrock_response({"ok": True})
+
+            invoke_claude("sys", "user", max_tokens=4096)
+
+            call_kwargs = mock_client.invoke_model.call_args[1]
+            body = json.loads(call_kwargs["body"])
+            assert body["max_tokens"] == 4096
+
+
 class TestRetryLogic:
     """Requirement 9.3, 9.4: exponential backoff retry on retryable errors."""
 

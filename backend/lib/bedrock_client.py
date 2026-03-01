@@ -30,13 +30,14 @@ def strip_code_fence(text: str) -> str:
     return text.strip()
 
 
-def invoke_claude(system_prompt: str, user_prompt: str) -> dict:
+def invoke_claude(system_prompt: str, user_prompt: str, max_tokens: int = 2048) -> dict:
     """
     Bedrock RuntimeでClaude Opus 4.6を呼び出す共通関数。
 
     Args:
         system_prompt: システムプロンプト
         user_prompt: ユーザープロンプト
+        max_tokens: 最大出力トークン数（デフォルト: 2048）
 
     Returns:
         Bedrockレスポンスをパースしたdict
@@ -48,7 +49,7 @@ def invoke_claude(system_prompt: str, user_prompt: str) -> dict:
 
     body = json.dumps({
         "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": 2048,
+        "max_tokens": max_tokens,
         "temperature": 0.7,
         "system": system_prompt,
         "messages": [{"role": "user", "content": [{"type": "text", "text": user_prompt}]}],

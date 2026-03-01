@@ -213,8 +213,14 @@ const Lv2App = (() => {
       }
       renderQuestion(session.questions[0], 0, session.questions.length);
     } catch (err) {
-      showSection("loading");
-      ApiClient.showError("ケーススタディの生成に失敗しました。ネットワーク接続を確認してください。", () => start());
+      showSection("question");
+      if (err.status && err.status >= 500) {
+        ApiClient.showError("サーバーエラーが発生しました。しばらく待ってからリトライしてください。", () => start());
+      } else if (err.status) {
+        ApiClient.showError("ケーススタディの生成に失敗しました。(" + err.status + ")", () => start());
+      } else {
+        ApiClient.showError("ネットワーク接続を確認してください。", () => start());
+      }
     }
   }
 
