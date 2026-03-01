@@ -8,8 +8,8 @@ import pytest
 from backend.handlers.grade_handler import handler, _parse_grade_result
 
 
-def _bedrock_grade_response(passed, score):
-    return {"content": [{"text": json.dumps({"passed": passed, "score": score})}]}
+def _bedrock_grade_response(passed, score, feedback="", explanation=""):
+    return {"content": [{"text": json.dumps({"passed": passed, "score": score, "feedback": feedback, "explanation": explanation})}]}
 
 
 def _api_event(body: dict) -> dict:
@@ -25,11 +25,9 @@ VALID_BODY = {
 
 
 class TestHandler:
-    @patch("backend.handlers.grade_handler.generate_feedback")
     @patch("backend.handlers.grade_handler.invoke_claude")
-    def test_returns_200_with_grade_and_review(self, mock_invoke, mock_review):
-        mock_invoke.return_value = _bedrock_grade_response(True, 85)
-        mock_review.return_value = {"feedback": "Good", "explanation": "Because..."}
+    def test_returns_200_with_grade_and_review(self, mock_invoke):
+        mock_invoke.return_value = _bedrock_grade_response(True, 85, "Good", "Because...")
 
         resp = handler(_api_event(VALID_BODY), None)
 
@@ -73,11 +71,9 @@ class TestHandler:
         resp = handler(_api_event(VALID_BODY), None)
         assert resp["statusCode"] == 500
 
-    @patch("backend.handlers.grade_handler.generate_feedback")
     @patch("backend.handlers.grade_handler.invoke_claude")
-    def test_cors_header_present(self, mock_invoke, mock_review):
-        mock_invoke.return_value = _bedrock_grade_response(True, 90)
-        mock_review.return_value = {"feedback": "OK", "explanation": "OK"}
+    def test_cors_header_present(self, mock_invoke):
+        mock_invoke.return_value = _bedrock_grade_response(True, 90, "OK", "OK")
 
         resp = handler(_api_event(VALID_BODY), None)
         assert resp["headers"]["Access-Control-Allow-Origin"] == "*"
@@ -86,7 +82,10 @@ class TestHandler:
 class TestParseGradeResult:
     def test_valid_result(self):
         result = _parse_grade_result(_bedrock_grade_response(True, 75))
-        assert result == {"passed": True, "score": 75}
+        assert result["passed"] is True
+        assert result["score"] == 75
+        assert "feedback" in result
+        assert "explanation" in result
 
     def test_raises_on_invalid_json(self):
         with pytest.raises(ValueError, match="not valid JSON"):

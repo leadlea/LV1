@@ -4,7 +4,6 @@ import json
 import logging
 
 from backend.lib.bedrock_client import invoke_claude, strip_code_fence
-from backend.lib.lv4_reviewer import generate_lv4_feedback
 from backend.lib.threshold_resolver import resolve_passed
 
 logger = logging.getLogger(__name__)
@@ -22,14 +21,16 @@ LV4_GRADE_SYSTEM_PROMPT = """あなたはAIカリキュラム「組織横断AI�
 出力は必ず以下のJSON形式で返してください。それ以外のテキストは含めないでください:
 {
   "passed": true または false,
-  "score": 0〜100の整数
+  "score": 0〜100の整数,
+  "feedback": "回答の良かった点と改善点を具体的に指摘するフィードバック文",
+  "explanation": "正解の考え方や背景知識、実務での応用例を含む解説文"
 }
 
 60点以上を合格とする。"""
 
 
 def _parse_grade_result(result: dict) -> dict:
-    """Bedrockレスポンスから採点結果を抽出しバリデーションする。"""
+    """Bedrockレスポンスから採点結果・フィードバック・解説を抽出しバリデーションする。"""
     text = result.get("content", [{}])[0].get("text", "")
     text = strip_code_fence(text)
 
@@ -41,13 +42,20 @@ def _parse_grade_result(result: dict) -> dict:
 
     passed = data.get("passed")
     score = data.get("score")
+    feedback = data.get("feedback", "")
+    explanation = data.get("explanation", "")
 
     if not isinstance(passed, bool):
         raise ValueError("passed must be a boolean")
     if not isinstance(score, int) or score < 0 or score > 100:
         raise ValueError("score must be an integer between 0 and 100")
 
-    return {"passed": passed, "score": score}
+    return {
+        "passed": passed,
+        "score": score,
+        "feedback": feedback if isinstance(feedback, str) else "",
+        "explanation": explanation if isinstance(explanation, str) else "",
+    }
 
 
 def handler(event, context):
@@ -98,13 +106,9 @@ def handler(event, context):
     )
 
     try:
-        # 1. 採点実行
         grade_raw = invoke_claude(LV4_GRADE_SYSTEM_PROMPT, user_prompt)
         grade_result = _parse_grade_result(grade_raw)
         grade_result["passed"] = resolve_passed(level=4, score=grade_result["score"])
-
-        # 2. レビュー（フィードバック・解説）生成
-        review = generate_lv4_feedback(question, answer, grade_result)
     except (ValueError, Exception) as e:
         logger.error("Failed to grade/review Lv4: %s", str(e))
         return {
@@ -121,7 +125,7 @@ def handler(event, context):
             "step": step,
             "passed": grade_result["passed"],
             "score": grade_result["score"],
-            "feedback": review["feedback"],
-            "explanation": review["explanation"],
+            "feedback": grade_result["feedback"],
+            "explanation": grade_result["explanation"],
         }, ensure_ascii=False),
     }

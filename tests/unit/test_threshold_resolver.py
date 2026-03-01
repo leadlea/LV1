@@ -63,7 +63,7 @@ class TestGetThreshold:
 
 
 def _bedrock_grade_response(passed: bool, score: int) -> dict:
-    return {"content": [{"text": json.dumps({"passed": passed, "score": score})}]}
+    return {"content": [{"text": json.dumps({"passed": passed, "score": score, "feedback": "ok", "explanation": "ok"})}]}
 
 
 def _api_event(body: dict) -> dict:
@@ -83,11 +83,9 @@ _LV4_BODY = {**_LV1_BODY, "step": 1}
 
 
 class TestHandlerLevelIntegration:
-    @patch("backend.handlers.grade_handler.generate_feedback",
-           return_value={"feedback": "ok", "explanation": "ok"})
     @patch("backend.handlers.grade_handler.invoke_claude")
     @patch("backend.handlers.grade_handler.resolve_passed")
-    def test_grade_handler_uses_level_1(self, mock_resolve, mock_invoke, _mock_review):
+    def test_grade_handler_uses_level_1(self, mock_resolve, mock_invoke):
         mock_invoke.return_value = _bedrock_grade_response(True, 70)
         mock_resolve.return_value = True
 
@@ -96,11 +94,9 @@ class TestHandlerLevelIntegration:
 
         mock_resolve.assert_called_once_with(level=1, score=70)
 
-    @patch("backend.handlers.lv2_grade_handler.generate_lv2_feedback",
-           return_value={"feedback": "ok", "explanation": "ok"})
     @patch("backend.handlers.lv2_grade_handler.invoke_claude")
     @patch("backend.handlers.lv2_grade_handler.resolve_passed")
-    def test_lv2_grade_handler_uses_level_2(self, mock_resolve, mock_invoke, _mock_review):
+    def test_lv2_grade_handler_uses_level_2(self, mock_resolve, mock_invoke):
         mock_invoke.return_value = _bedrock_grade_response(True, 70)
         mock_resolve.return_value = True
 
@@ -109,11 +105,9 @@ class TestHandlerLevelIntegration:
 
         mock_resolve.assert_called_once_with(level=2, score=70)
 
-    @patch("backend.handlers.lv3_grade_handler.generate_lv3_feedback",
-           return_value={"feedback": "ok", "explanation": "ok"})
     @patch("backend.handlers.lv3_grade_handler.invoke_claude")
     @patch("backend.handlers.lv3_grade_handler.resolve_passed")
-    def test_lv3_grade_handler_uses_level_3(self, mock_resolve, mock_invoke, _mock_review):
+    def test_lv3_grade_handler_uses_level_3(self, mock_resolve, mock_invoke):
         mock_invoke.return_value = _bedrock_grade_response(True, 70)
         mock_resolve.return_value = True
 
@@ -122,11 +116,9 @@ class TestHandlerLevelIntegration:
 
         mock_resolve.assert_called_once_with(level=3, score=70)
 
-    @patch("backend.handlers.lv4_grade_handler.generate_lv4_feedback",
-           return_value={"feedback": "ok", "explanation": "ok"})
     @patch("backend.handlers.lv4_grade_handler.invoke_claude")
     @patch("backend.handlers.lv4_grade_handler.resolve_passed")
-    def test_lv4_grade_handler_uses_level_4(self, mock_resolve, mock_invoke, _mock_review):
+    def test_lv4_grade_handler_uses_level_4(self, mock_resolve, mock_invoke):
         mock_invoke.return_value = _bedrock_grade_response(True, 70)
         mock_resolve.return_value = True
 
