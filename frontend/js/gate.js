@@ -20,6 +20,18 @@ const Gate = (() => {
   }
 
   /**
+   * 全レベルクリア判定
+   * @param {object} levels - { lv1: {unlocked, passed}, lv2: ..., lv3: ..., lv4: ... }
+   * @returns {boolean}
+   */
+  function checkAllLevelsClear(levels) {
+    return levels.lv1 && levels.lv1.passed &&
+           levels.lv2 && levels.lv2.passed &&
+           levels.lv3 && levels.lv3.passed &&
+           levels.lv4 && levels.lv4.passed;
+  }
+
+  /**
    * レベルカードの表示状態を更新する
    * @param {object} levels - { lv1: {unlocked, passed}, lv2: ..., lv3: ..., lv4: ... }
    */
@@ -44,6 +56,18 @@ const Gate = (() => {
           statusEl.textContent = "✅ 合格済み";
           statusEl.classList.add("level-card__status--passed");
         }
+      }
+    }
+
+    // 全レベルクリア時の祝福メッセージ
+    if (checkAllLevelsClear(levels)) {
+      const header = document.querySelector(".index-content__header");
+      if (header && !document.getElementById("all-clear-banner")) {
+        const banner = document.createElement("div");
+        banner.id = "all-clear-banner";
+        banner.style.cssText = "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 1.5rem; border-radius: 10px; text-align: center; margin-bottom: 1.5rem;";
+        banner.innerHTML = '<div style="font-size: 2rem; margin-bottom: 0.5rem;">🎉🏆🎉</div><h2 style="margin: 0 0 0.5rem; font-size: 1.3rem;">全レベルクリア！おめでとうございます！</h2><p style="margin: 0; opacity: 0.9;">AI Levelsカリキュラム全体を修了しました。</p>';
+        header.after(banner);
       }
     }
   }

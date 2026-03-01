@@ -27,19 +27,20 @@ def _uuid_v4_strategy():
     ).map(lambda t: f"{t[0]}-{t[1]}-4{t[2]}-{t[3]}{t[4]}-{t[5]}")
 
 
-@given(lv1_passed=st.booleans(), lv2_passed=st.booleans())
+@given(lv1_passed=st.booleans(), lv2_passed=st.booleans(), lv3_passed=st.booleans(), lv4_passed=st.booleans())
 @settings(max_examples=100)
-def test_gating_logic_correctness(lv1_passed, lv2_passed):
+def test_gating_logic_correctness(lv1_passed, lv2_passed, lv3_passed, lv4_passed):
     """Property 7: ゲーティングロジックの正当性
 
     任意のセッション状態に対して、Lv1が合格していない場合、
     レベル状態APIはLv2以降のunlockedをfalseで返すこと。
     Lv1が合格している場合のみLv2のunlockedがtrueになること。
     Lv2が合格している場合のみLv3のunlockedがtrueになること。
+    Lv3が合格している場合のみLv4のunlockedがtrueになること。
 
     **Validates: Requirements 6.3**
     """
-    levels = _build_levels(lv1_passed, lv2_passed)
+    levels = _build_levels(lv1_passed, lv2_passed, lv3_passed, lv4_passed)
 
     # Lv1 is always unlocked
     assert levels["lv1"]["unlocked"] is True
@@ -51,16 +52,16 @@ def test_gating_logic_correctness(lv1_passed, lv2_passed):
 
     # Lv3 unlocked iff lv2_passed
     assert levels["lv3"]["unlocked"] == lv2_passed
-    assert levels["lv3"]["passed"] is False
+    assert levels["lv3"]["passed"] == lv3_passed
 
-    # Lv4 always locked
-    assert levels["lv4"]["unlocked"] is False
-    assert levels["lv4"]["passed"] is False
+    # Lv4 unlocked iff lv3_passed
+    assert levels["lv4"]["unlocked"] == lv3_passed
+    assert levels["lv4"]["passed"] == lv4_passed
 
 
-@given(session_id=_uuid_v4_strategy(), lv1_passed=st.booleans(), lv2_passed=st.booleans())
+@given(session_id=_uuid_v4_strategy(), lv1_passed=st.booleans(), lv2_passed=st.booleans(), lv3_passed=st.booleans(), lv4_passed=st.booleans())
 @settings(max_examples=100)
-def test_gating_handler_end_to_end(session_id, lv1_passed, lv2_passed):
+def test_gating_handler_end_to_end(session_id, lv1_passed, lv2_passed, lv3_passed, lv4_passed):
     """Property 7 (handler): ゲーティングロジックの正当性（ハンドラ経由）
 
     任意のセッション状態に対して、ハンドラ経由でも同じゲーティング
@@ -71,7 +72,7 @@ def test_gating_handler_end_to_end(session_id, lv1_passed, lv2_passed):
     event = {"queryStringParameters": {"session_id": session_id}}
 
     mock_table = MagicMock()
-    item = {"lv1_passed": lv1_passed, "lv2_passed": lv2_passed}
+    item = {"lv1_passed": lv1_passed, "lv2_passed": lv2_passed, "lv3_passed": lv3_passed, "lv4_passed": lv4_passed}
     mock_table.get_item.return_value = {"Item": item}
 
     mock_dynamodb = MagicMock()
@@ -91,5 +92,6 @@ def test_gating_handler_end_to_end(session_id, lv1_passed, lv2_passed):
     # Lv3 unlocked iff lv2_passed
     assert levels["lv3"]["unlocked"] == lv2_passed
 
-    # Lv4 always locked
-    assert levels["lv4"]["unlocked"] is False
+    # Lv4 unlocked iff lv3_passed
+    assert levels["lv4"]["unlocked"] == lv3_passed
+    assert levels["lv4"]["passed"] == lv4_passed

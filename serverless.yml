@@ -82,6 +82,50 @@ functions:
           method: post
           cors: true
 
+  lv3Generate:
+    handler: backend/handlers/lv3_generate_handler.handler
+    events:
+      - http:
+          path: lv3/generate
+          method: post
+          cors: true
+  lv3Grade:
+    handler: backend/handlers/lv3_grade_handler.handler
+    events:
+      - http:
+          path: lv3/grade
+          method: post
+          cors: true
+  lv3Complete:
+    handler: backend/handlers/lv3_complete_handler.handler
+    events:
+      - http:
+          path: lv3/complete
+          method: post
+          cors: true
+
+  lv4Generate:
+    handler: backend/handlers/lv4_generate_handler.handler
+    events:
+      - http:
+          path: lv4/generate
+          method: post
+          cors: true
+  lv4Grade:
+    handler: backend/handlers/lv4_grade_handler.handler
+    events:
+      - http:
+          path: lv4/grade
+          method: post
+          cors: true
+  lv4Complete:
+    handler: backend/handlers/lv4_complete_handler.handler
+    events:
+      - http:
+          path: lv4/complete
+          method: post
+          cors: true
+
 resources:
   Resources:
     ResultsTable:

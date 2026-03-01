@@ -153,5 +153,83 @@ const ApiClient = (() => {
     });
   }
 
-  return { generate, grade, complete, getLevelsStatus, lv2Generate, lv2Grade, lv2Complete, showError, hideError };
+  /**
+   * POST /lv3/generate - Lv3プロジェクトリーダーシップシナリオ生成
+   * @param {string} sessionId
+   * @returns {Promise<{session_id: string, questions: Array}>}
+   */
+  function lv3Generate(sessionId) {
+    return request("/lv3/generate", {
+      method: "POST",
+      body: JSON.stringify({ session_id: sessionId }),
+    });
+  }
+
+  /**
+   * POST /lv3/grade - Lv3回答採点+レビュー
+   * @param {string} sessionId
+   * @param {number} step
+   * @param {object} question
+   * @param {string} answer
+   * @returns {Promise<{session_id: string, step: number, passed: boolean, score: number, feedback: string, explanation: string}>}
+   */
+  function lv3Grade(sessionId, step, question, answer) {
+    return request("/lv3/grade", {
+      method: "POST",
+      body: JSON.stringify({ session_id: sessionId, step, question, answer }),
+    });
+  }
+
+  /**
+   * POST /lv3/complete - Lv3完了レコード保存
+   * @param {object} payload - { session_id, questions, answers, grades, final_passed }
+   * @returns {Promise<{saved: boolean, record_id: string}>}
+   */
+  function lv3Complete(payload) {
+    return request("/lv3/complete", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  /**
+   * POST /lv4/generate - Lv4組織横断ガバナンスシナリオ生成
+   * @param {string} sessionId
+   * @returns {Promise<{session_id: string, questions: Array}>}
+   */
+  function lv4Generate(sessionId) {
+    return request("/lv4/generate", {
+      method: "POST",
+      body: JSON.stringify({ session_id: sessionId }),
+    });
+  }
+
+  /**
+   * POST /lv4/grade - Lv4回答採点+レビュー
+   * @param {string} sessionId
+   * @param {number} step
+   * @param {object} question
+   * @param {string} answer
+   * @returns {Promise<{session_id: string, step: number, passed: boolean, score: number, feedback: string, explanation: string}>}
+   */
+  function lv4Grade(sessionId, step, question, answer) {
+    return request("/lv4/grade", {
+      method: "POST",
+      body: JSON.stringify({ session_id: sessionId, step, question, answer }),
+    });
+  }
+
+  /**
+   * POST /lv4/complete - Lv4完了レコード保存
+   * @param {object} payload - { session_id, questions, answers, grades, final_passed }
+   * @returns {Promise<{saved: boolean, record_id: string}>}
+   */
+  function lv4Complete(payload) {
+    return request("/lv4/complete", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  return { generate, grade, complete, getLevelsStatus, lv2Generate, lv2Grade, lv2Complete, lv3Generate, lv3Grade, lv3Complete, lv4Generate, lv4Grade, lv4Complete, showError, hideError };
 })();

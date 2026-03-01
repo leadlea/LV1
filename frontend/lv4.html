@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Levels - Lv4 カリキュラム</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1><a href="index.html" class="header__link">AI Levels</a></h1>
+      <p class="subtitle">Lv4: 組織横断AI活用標準化×ガバナンス設計×持続的AI活用文化構築</p>
+    </header>
+
+    <!-- ステップ進捗バー -->
+    <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+      <div class="progress-bar__fill" id="progress-fill"></div>
+      <span class="progress-bar__label" id="progress-label">準備中...</span>
+    </div>
+
+    <!-- 6ステップ進行状況 -->
+    <div class="lv4-steps" id="lv4-steps">
+      <div class="lv4-steps__item" data-step="1">
+        <span class="lv4-steps__num">1</span>
+        <span class="lv4-steps__name">AI活用標準化戦略</span>
+      </div>
+      <div class="lv4-steps__item" data-step="2">
+        <span class="lv4-steps__num">2</span>
+        <span class="lv4-steps__name">ガバナンス設計</span>
+      </div>
+      <div class="lv4-steps__item" data-step="3">
+        <span class="lv4-steps__num">3</span>
+        <span class="lv4-steps__name">組織横断推進体制</span>
+      </div>
+      <div class="lv4-steps__item" data-step="4">
+        <span class="lv4-steps__num">4</span>
+        <span class="lv4-steps__name">文化醸成プログラム</span>
+      </div>
+      <div class="lv4-steps__item" data-step="5">
+        <span class="lv4-steps__num">5</span>
+        <span class="lv4-steps__name">リスク管理</span>
+      </div>
+      <div class="lv4-steps__item" data-step="6">
+        <span class="lv4-steps__num">6</span>
+        <span class="lv4-steps__name">中長期ロードマップ</span>
+      </div>
+    </div>
+
+    <main class="lv1-main">
+      <!-- 読み込み中 -->
+      <section class="lv1-section" id="section-loading">
+        <div class="spinner" aria-label="読み込み中"></div>
+        <p class="lv4-loading-text">組織横断ガバナンスシナリオを生成しています...</p>
+      </section>
+
+      <!-- 設問表示 + 回答入力 -->
+      <section class="lv1-section" id="section-question" hidden>
+        <div class="question-card">
+          <div class="question-card__header">
+            <span class="question-card__step" id="question-step"></span>
+            <span class="question-card__type" id="question-type"></span>
+          </div>
+          <div class="question-card__context lv4-context" id="question-context" hidden></div>
+          <p class="question-card__prompt" id="question-prompt"></p>
+
+          <!-- 自由記述（scenario / free_text用） -->
+          <div class="question-card__textarea-wrap" id="textarea-wrap">
+            <label for="answer-text" class="sr-only">回答を入力</label>
+            <textarea id="answer-text" class="question-card__textarea lv4-textarea" rows="14" placeholder="回答を入力してください..."></textarea>
+            <div class="lv4-char-count" id="char-count">0 文字</div>
+          </div>
+
+          <button class="btn btn--primary" id="btn-submit" disabled>回答を送信</button>
+        </div>
+      </section>
+
+      <!-- 採点結果 + フィードバック -->
+      <section class="lv1-section" id="section-result" hidden>
+        <div class="result-card">
+          <div class="result-card__verdict" id="result-verdict"></div>
+          <div class="result-card__score" id="result-score"></div>
+          <div class="result-card__feedback">
+            <h3>フィードバック</h3>
+            <p id="result-feedback"></p>
+          </div>
+          <div class="result-card__explanation">
+            <h3>解説</h3>
+            <p id="result-explanation"></p>
+          </div>
+          <button class="btn btn--primary" id="btn-next">次のステップへ</button>
+        </div>
+      </section>
+
+      <!-- 最終結果 -->
+      <section class="lv1-section" id="section-final" hidden>
+        <div class="final-card">
+          <div class="final-card__icon" id="final-icon"></div>
+          <h2 class="final-card__title" id="final-title"></h2>
+          <p class="final-card__message" id="final-message"></p>
+          <div class="final-card__summary" id="final-summary"></div>
+          <div id="all-clear-message" hidden></div>
+          <a href="index.html" class="btn btn--primary">レベル選択に戻る</a>
+        </div>
+      </section>
+    </main>
+
+    <!-- エラーバナー -->
+    <div class="error-banner" id="error-banner" hidden>
+      <p id="error-message"></p>
+      <button id="error-retry-btn" class="btn btn--retry">リトライ</button>
+    </div>
+  </div>
+
+  <style>
+    /* Lv4 step indicators */
+    .lv4-steps {
+      display: flex;
+      justify-content: center;
+      gap: 0.4rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .lv4-steps__item {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.35rem 0.65rem;
+      background: #e0e0e0;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      color: #666;
+      transition: background 0.2s, color 0.2s;
+    }
+    .lv4-steps__item--active {
+      background: #4361ee;
+      color: #fff;
+    }
+    .lv4-steps__item--done {
+      background: #2ecc71;
+      color: #fff;
+    }
+    .lv4-steps__num {
+      font-weight: 700;
+    }
+    /* Lv4 expanded context area */
+    .lv4-context {
+      min-height: 100px;
+      font-size: 0.95rem;
+      line-height: 1.8;
+    }
+    /* Lv4 expanded textarea */
+    .lv4-textarea {
+      min-height: 220px;
+    }
+    .lv4-char-count {
+      text-align: right;
+      font-size: 0.8rem;
+      color: #999;
+      margin-top: 0.3rem;
+    }
+    @media (max-width: 600px) {
+      .lv4-steps { gap: 0.25rem; }
+      .lv4-steps__item { font-size: 0.6rem; padding: 0.25rem 0.45rem; }
+      .lv4-textarea { min-height: 160px; }
+    }
+  </style>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/lv4-app.js"></script>
+</body>
+</html>
