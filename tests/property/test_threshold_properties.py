@@ -51,7 +51,7 @@ _ENV_VALUES = st.one_of(
 
 def _bedrock_grade_response(passed: bool, score: int) -> dict:
     """Build a mock Bedrock response for the grade handler."""
-    return {"content": [{"text": json.dumps({"passed": passed, "score": score})}]}
+    return {"content": [{"text": json.dumps({"passed": passed, "score": score, "feedback": "Good", "explanation": "OK"})}]}
 
 
 def _api_event(session_id: str, step: int, answer: str) -> dict:
@@ -109,10 +109,8 @@ def test_score_preserved(score, threshold):
     with (
         patch.dict(os.environ, {"PASS_THRESHOLD_LV1": str(threshold)}),
         patch("backend.handlers.grade_handler.invoke_claude") as mock_invoke,
-        patch("backend.handlers.grade_handler.generate_feedback") as mock_review,
     ):
         mock_invoke.return_value = _bedrock_grade_response(True, score)
-        mock_review.return_value = {"feedback": "Good", "explanation": "OK"}
         resp = handler(event, None)
 
     assert resp["statusCode"] == 200

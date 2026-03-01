@@ -7,23 +7,9 @@ from backend.lib.bedrock_client import invoke_claude, strip_code_fence
 
 logger = logging.getLogger(__name__)
 
-LV4_GENERATE_SYSTEM_PROMPT = """AIカリキュラム「組織横断AI活用標準化×ガバナンス設計×持続的AI活用文化構築」の出題エージェント。
-コンサルティング業務で実際に発生しうる大規模組織のAI活用標準化・ガバナンス課題に基づく6ステップの組織横断ガバナンスシナリオを生成せよ。
-6問すべてが同一の組織シナリオに基づき、一貫性のある組織横断ガバナンスシナリオとすること。
-毎回異なる組織シナリオを使うこと。
-
-ステップ構成:
-- ステップ1（AI活用標準化戦略）: scenario形式 — 組織全体のAI活用状況を提示し、標準化された活用方針・ガイドラインの策定を求める
-- ステップ2（ガバナンスフレームワーク設計）: free_text形式 — ステップ1の組織状況に基づき、AI活用のポリシー・ルール・監査体制を含む包括的なガバナンスフレームワークの設計を求める
-- ステップ3（組織横断AI推進体制構築）: scenario形式 — 複数部門のAI活用課題を提示し、横断的な推進体制・意思決定プロセス・コミュニケーション設計を求める
-- ステップ4（AI活用文化醸成プログラム）: free_text形式 — 組織の現状文化を分析し、段階的な変革プログラム・成功指標・定着化施策の設計を求める
-- ステップ5（リスク管理・コンプライアンス）: scenario形式 — AI活用に伴うリスクシナリオを提示し、法規制・倫理基準への準拠を含む包括的なリスク管理体制の設計を求める
-- ステップ6（中長期AI活用ロードマップ）: free_text形式 — 組織全体のAI活用実績データを提示し、中長期AI活用計画と定量的な成果指標（KPI）の策定を求める
-
-出力JSON形式（これ以外のテキスト禁止）:
-{"questions":[{"step":1,"type":"scenario","prompt":"設問文","options":null,"context":"組織シナリオ説明"},{"step":2,"type":"free_text","prompt":"設問文","options":null,"context":"文脈説明"},{"step":3,"type":"scenario","prompt":"設問文","options":null,"context":"複数部門課題シナリオ"},{"step":4,"type":"free_text","prompt":"設問文","options":null,"context":"組織文化の現状"},{"step":5,"type":"scenario","prompt":"設問文","options":null,"context":"リスクシナリオ"},{"step":6,"type":"free_text","prompt":"設問文","options":null,"context":"AI活用実績データ"}]}
-
-typeは "scenario" または "free_text" のみ。stepは1〜6の連番。contextは必ず含めること。"""
+LV4_GENERATE_SYSTEM_PROMPT = """組織横断AI活用ガバナンスの出題。同一組織シナリオで6問生成。毎回異なるシナリオ。
+step1:scenario(AI活用標準化戦略) step2:free_text(ガバナンスフレームワーク) step3:scenario(組織横断推進体制) step4:free_text(AI活用文化醸成) step5:scenario(リスク管理) step6:free_text(中長期ロードマップ)
+JSON出力のみ:{"questions":[{"step":1,"type":"scenario","prompt":"設問","options":null,"context":"説明"},{"step":2,"type":"free_text","prompt":"設問","options":null,"context":"説明"},{"step":3,"type":"scenario","prompt":"設問","options":null,"context":"説明"},{"step":4,"type":"free_text","prompt":"設問","options":null,"context":"説明"},{"step":5,"type":"scenario","prompt":"設問","options":null,"context":"説明"},{"step":6,"type":"free_text","prompt":"設問","options":null,"context":"説明"}]}"""
 
 EXPECTED_NUM_QUESTIONS = 6
 STEP_TYPE_MAP = {1: "scenario", 2: "free_text", 3: "scenario", 4: "free_text", 5: "scenario", 6: "free_text"}

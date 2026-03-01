@@ -6,6 +6,7 @@ Validates: Requirements 2.1, 2.3
 """
 
 import json
+import os
 from unittest.mock import patch
 
 from hypothesis import given, settings
@@ -26,7 +27,7 @@ def _question_strategy():
 
 
 def _bedrock_grade_response(passed: bool, score: int) -> dict:
-    return {"content": [{"text": json.dumps({"passed": passed, "score": score})}]}
+    return {"content": [{"text": json.dumps({"passed": passed, "score": score, "feedback": "Good job", "explanation": "Explanation"})}]}
 
 
 @given(
@@ -36,9 +37,10 @@ def _bedrock_grade_response(passed: bool, score: int) -> dict:
     answer=st.text(min_size=1, max_size=300).filter(lambda s: s.strip()),
     passed=st.booleans(),
     score=st.integers(min_value=0, max_value=100),
+    threshold=st.integers(min_value=0, max_value=100),
 )
 @settings(max_examples=100)
-def test_grade_response_structure(session_id, step, question, answer, passed, score):
+def test_grade_response_structure(session_id, step, question, answer, passed, score, threshold):
     """Property 3: 採点結果の構造的正当性
 
     任意の設問と回答の組み合わせに対して、Graderが返す採点結果は、
@@ -56,11 +58,10 @@ def test_grade_response_structure(session_id, step, question, answer, passed, sc
     }
 
     with (
+        patch.dict(os.environ, {"PASS_THRESHOLD_LV1": str(threshold)}),
         patch("backend.handlers.grade_handler.invoke_claude") as mock_invoke,
-        patch("backend.handlers.grade_handler.generate_feedback") as mock_review,
     ):
         mock_invoke.return_value = _bedrock_grade_response(passed, score)
-        mock_review.return_value = {"feedback": "Good job", "explanation": "Explanation"}
         resp = handler(event, None)
 
     assert resp["statusCode"] == 200
@@ -73,9 +74,9 @@ def test_grade_response_structure(session_id, step, question, answer, passed, sc
     # step echoed back
     assert body["step"] == step
 
-    # passed is a boolean
+    # passed is a boolean determined by threshold
     assert isinstance(body["passed"], bool)
-    assert body["passed"] == passed
+    assert body["passed"] == (score >= threshold)
 
     # score is an integer in 0-100
     assert isinstance(body["score"], int)

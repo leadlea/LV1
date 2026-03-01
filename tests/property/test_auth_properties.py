@@ -92,10 +92,8 @@ def test_grade_no_auth_required(session_id, answer):
 
     with (
         patch("backend.handlers.grade_handler.invoke_claude") as mock_invoke,
-        patch("backend.handlers.grade_handler.generate_feedback") as mock_review,
     ):
-        mock_invoke.return_value = _bedrock_grade_response()
-        mock_review.return_value = {"feedback": "Good", "explanation": "Explanation"}
+        mock_invoke.return_value = {"content": [{"text": json.dumps({"passed": True, "score": 80, "feedback": "Good", "explanation": "Explanation"})}]}
         resp = grade_handler(event, None)
 
     assert resp["statusCode"] == 200

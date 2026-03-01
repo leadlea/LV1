@@ -10,7 +10,7 @@ from botocore.exceptions import ClientError
 logger = logging.getLogger(__name__)
 
 REGION = "ap-northeast-1"
-MODEL_ID = "global.anthropic.claude-sonnet-4-6"
+MODEL_ID = "anthropic.claude-sonnet-4-6"
 MAX_RETRIES = 3
 BASE_DELAY = 1  # seconds
 
@@ -49,7 +49,7 @@ def invoke_claude(system_prompt: str, user_prompt: str, max_tokens: int = 2048) 
     client = boto3.client(
         "bedrock-runtime",
         region_name=REGION,
-        config=BotoConfig(read_timeout=25, connect_timeout=5),
+        config=BotoConfig(read_timeout=28, connect_timeout=5),
     )
 
     body = json.dumps({

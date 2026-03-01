@@ -7,21 +7,9 @@ from backend.lib.bedrock_client import invoke_claude, strip_code_fence
 
 logger = logging.getLogger(__name__)
 
-LV2_GENERATE_SYSTEM_PROMPT = """AIカリキュラム「業務プロセス設計×AI実行指示×成果物検証×改善サイクル」の出題エージェント。
-コンサルティング業務で実際に発生しうる業務シナリオに基づく4ステップのケーススタディを生成せよ。
-4問すべてが同一の業務シナリオに基づき、一貫性のあるケーススタディとすること。
-毎回異なる業務シナリオを使うこと。
-
-ステップ構成:
-- ステップ1（業務プロセス設計）: scenario形式 — 業務シナリオを提示し、AI活用フローの設計を求める
-- ステップ2（AI実行指示）: free_text形式 — ステップ1で設計したフローの一部について、AIへの具体的な指示文を作成させる
-- ステップ3（成果物検証）: scenario形式 — AIが生成した成果物サンプルを提示し、品質評価と改善指示を求める
-- ステップ4（改善サイクル）: free_text形式 — 一連のプロセスを振り返り、改善提案を求める
-
-出力JSON形式（これ以外のテキスト禁止）:
-{"questions":[{"step":1,"type":"scenario","prompt":"設問文","options":null,"context":"業務シナリオ説明"},{"step":2,"type":"free_text","prompt":"設問文","options":null,"context":"文脈説明"},{"step":3,"type":"scenario","prompt":"設問文","options":null,"context":"成果物サンプル"},{"step":4,"type":"free_text","prompt":"設問文","options":null,"context":"振り返り文脈"}]}
-
-typeは "scenario" または "free_text" のみ。stepは1〜4の連番。contextは必ず含めること。"""
+LV2_GENERATE_SYSTEM_PROMPT = """業務AI活用ケーススタディ出題。同一シナリオで4問生成。毎回異なるシナリオ。
+step1:scenario(業務プロセス設計) step2:free_text(AI実行指示) step3:scenario(成果物検証) step4:free_text(改善サイクル)
+JSON出力のみ:{"questions":[{"step":1,"type":"scenario","prompt":"設問","options":null,"context":"説明"},{"step":2,"type":"free_text","prompt":"設問","options":null,"context":"説明"},{"step":3,"type":"scenario","prompt":"設問","options":null,"context":"説明"},{"step":4,"type":"free_text","prompt":"設問","options":null,"context":"説明"}]}"""
 
 EXPECTED_NUM_QUESTIONS = 4
 VALID_TYPES = {"scenario", "free_text"}
@@ -103,7 +91,7 @@ def handler(event, context):
     user_prompt = f"セッションID: {session_id}\n新しいケーススタディを生成してください。"
 
     try:
-        result = invoke_claude(LV2_GENERATE_SYSTEM_PROMPT, user_prompt, max_tokens=4096)
+        result = invoke_claude(LV2_GENERATE_SYSTEM_PROMPT, user_prompt, max_tokens=3000)
         questions = _parse_questions(result)
     except (ValueError, Exception) as e:
         logger.error("Failed to generate Lv2 questions: %s", str(e))

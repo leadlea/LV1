@@ -129,13 +129,13 @@ class TestParseQuestionsTruncatedJson:
 
 
 # ---------------------------------------------------------------------------
-# Task 4.4: handler が invoke_claude を max_tokens=4096 で呼ぶことの確認
+# Task 4.4: handler が invoke_claude を max_tokens=3000 で呼ぶことの確認
 # ---------------------------------------------------------------------------
 class TestHandlerMaxTokens:
-    """handler should call invoke_claude with max_tokens=4096."""
+    """handler should call invoke_claude with max_tokens=3000."""
 
     @patch("backend.handlers.lv2_generate_handler.invoke_claude")
-    def test_invoke_claude_called_with_max_tokens_4096(self, mock_invoke):
+    def test_invoke_claude_called_with_max_tokens_3000(self, mock_invoke):
         mock_invoke.return_value = _bedrock_response(_valid_questions())
 
         resp = handler(_api_event({"session_id": "test-session"}), None)
@@ -143,6 +143,6 @@ class TestHandlerMaxTokens:
         assert resp["statusCode"] == 200
         mock_invoke.assert_called_once()
         call_args = mock_invoke.call_args
-        assert call_args[1].get("max_tokens") == 4096 or (
-            len(call_args[0]) >= 3 and call_args[0][2] == 4096
+        assert call_args[1].get("max_tokens") == 3000 or (
+            len(call_args[0]) >= 3 and call_args[0][2] == 3000
         )

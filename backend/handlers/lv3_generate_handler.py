@@ -7,22 +7,9 @@ from backend.lib.bedrock_client import invoke_claude, strip_code_fence
 
 logger = logging.getLogger(__name__)
 
-LV3_GENERATE_SYSTEM_PROMPT = """AIカリキュラム「AI活用プロジェクトリーダーシップ×チームAI戦略策定×AI導入計画立案×スキル育成計画×ROI評価改善」の出題エージェント。
-コンサルティング業務で実際に発生しうるAI導入プロジェクトの組織シナリオに基づく5ステップのプロジェクトリーダーシップシナリオを生成せよ。
-5問すべてが同一の組織シナリオに基づき、一貫性のあるプロジェクトリーダーシップシナリオとすること。
-毎回異なる組織シナリオを使うこと。
-
-ステップ構成:
-- ステップ1（AI活用プロジェクトリーダーシップ）: scenario形式 — 組織のAI活用課題を提示し、プロジェクト計画（目的・スコープ・体制・スケジュール）の策定を求める
-- ステップ2（チームAI戦略策定）: free_text形式 — ステップ1の組織状況に基づき、チーム全体のAI活用ロードマップ（短期・中期・長期）の策定を求める
-- ステップ3（AI導入計画立案）: scenario形式 — 具体的なAI導入対象業務を提示し、実行計画・リソース配分・リスク対策を含む導入計画の立案を求める
-- ステップ4（スキル育成計画）: scenario形式 — チームメンバーのスキル状況データを提示し、段階的な育成プランと評価指標の設計を求める
-- ステップ5（ROI評価改善）: free_text形式 — AI活用の実績データを提示し、定量的なROI評価と改善施策の立案を求める
-
-出力JSON形式（これ以外のテキスト禁止）:
-{"questions":[{"step":1,"type":"scenario","prompt":"設問文","options":null,"context":"組織シナリオ説明"},{"step":2,"type":"free_text","prompt":"設問文","options":null,"context":"文脈説明"},{"step":3,"type":"scenario","prompt":"設問文","options":null,"context":"AI導入対象業務シナリオ"},{"step":4,"type":"scenario","prompt":"設問文","options":null,"context":"スキル状況データ"},{"step":5,"type":"free_text","prompt":"設問文","options":null,"context":"実績データ"}]}
-
-typeは "scenario" または "free_text" のみ。stepは1〜5の連番。contextは必ず含めること。"""
+LV3_GENERATE_SYSTEM_PROMPT = """AI導入プロジェクトリーダーシップの出題。同一組織シナリオで5問生成。毎回異なるシナリオ。
+step1:scenario(プロジェクト計画策定) step2:free_text(AI活用ロードマップ) step3:scenario(AI導入計画立案) step4:scenario(スキル育成計画) step5:free_text(ROI評価改善)
+JSON出力のみ:{"questions":[{"step":1,"type":"scenario","prompt":"設問","options":null,"context":"説明"},{"step":2,"type":"free_text","prompt":"設問","options":null,"context":"説明"},{"step":3,"type":"scenario","prompt":"設問","options":null,"context":"説明"},{"step":4,"type":"scenario","prompt":"設問","options":null,"context":"説明"},{"step":5,"type":"free_text","prompt":"設問","options":null,"context":"説明"}]}"""
 
 EXPECTED_NUM_QUESTIONS = 5
 VALID_TYPES = {"scenario", "free_text"}

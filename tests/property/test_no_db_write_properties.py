@@ -35,7 +35,7 @@ def _bedrock_generate_response(questions):
 
 def _bedrock_grade_response(passed, score):
     """Build a mock Bedrock response for grade_handler."""
-    return {"content": [{"text": json.dumps({"passed": passed, "score": score})}]}
+    return {"content": [{"text": json.dumps({"passed": passed, "score": score, "feedback": "Good", "explanation": "Explanation"})}]}
 
 
 @given(
@@ -103,13 +103,11 @@ def test_grade_handler_no_db_write(session_id, step, question, answer, passed, s
 
     with (
         patch("backend.handlers.grade_handler.invoke_claude") as mock_invoke,
-        patch("backend.handlers.grade_handler.generate_feedback") as mock_review,
         patch("backend.handlers.grade_handler.boto3", mock_boto3, create=True),
         patch("boto3.resource", mock_boto3.resource),
         patch("boto3.client", mock_boto3.client),
     ):
         mock_invoke.return_value = _bedrock_grade_response(passed, score)
-        mock_review.return_value = {"feedback": "Good", "explanation": "Explanation"}
         resp = grade_handler(event, None)
 
     assert resp["statusCode"] == 200

@@ -7,7 +7,7 @@ provider:
   environment:
     RESULTS_TABLE: ai-levels-results
     PROGRESS_TABLE: ai-levels-progress
-    BEDROCK_MODEL_ID: global.anthropic.claude-sonnet-4-6
+    BEDROCK_MODEL_ID: anthropic.claude-sonnet-4-6
     PASS_THRESHOLD_LV1: "30"
     PASS_THRESHOLD_LV2: "30"
     PASS_THRESHOLD_LV3: "30"
