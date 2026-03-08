@@ -411,3 +411,4 @@ functions:
 ### 前提条件
 
 この結果返却APIは「ユーザー紐付け」提案（前セクション）の `USER#{user_id}` キー設計が実装済みであることが前提。現行の `SESSION#{session_id}` のみの場合は `/api/results/session/{session_id}` エンドポイントだけが利用可能。
+
