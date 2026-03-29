@@ -10,7 +10,7 @@ from botocore.exceptions import ClientError
 logger = logging.getLogger(__name__)
 
 REGION = "ap-northeast-1"
-MODEL_ID = "apac.anthropic.claude-opus-4-0-20250514-v1:0"
+MODEL_ID = "global.anthropic.claude-opus-4-5-20251101-v1:0"
 MAX_RETRIES = 3
 BASE_DELAY = 1  # seconds
 
