@@ -40,6 +40,13 @@ functions:
           path: selfcheck/definitions
           method: get
           cors: true
+  selfcheckHistory:
+    handler: backend/handlers/history_handler.handler
+    events:
+      - http:
+          path: selfcheck/history
+          method: get
+          cors: true
 
 resources:
   Resources:

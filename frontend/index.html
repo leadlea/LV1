@@ -12,6 +12,7 @@
     <img src="https://www.sojitz-ti.com/resources/images/common/logo_stechi.svg" alt="双日テックイノベーション" class="header-logo">
     <nav class="nav">
       <a href="index.html" class="active">ホーム</a>
+      <a href="history.html">履歴</a>
       <a href="definitions.html">スキル定義</a>
       <a href="competency.html">マップ</a>
     </nav>
@@ -36,6 +37,19 @@
     <div class="card">
       <h2>あなたの職種を選んでください</h2>
       <p>トラックに応じた質問が表示されます。所要時間は約3分です。</p>
+
+      <!-- Employee ID -->
+      <div style="margin-bottom:20px;padding:16px;background:var(--bg);border-radius:var(--radius-sm);">
+        <label style="font-size:13px;font-weight:600;color:var(--text-mid);display:block;margin-bottom:6px;">👤 従業員番号（任意）</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="text" id="user-id-input" placeholder="例: STI-001" style="flex:1;padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+          <button id="save-uid-btn" class="btn" style="padding:10px 16px;font-size:13px;" type="button">保存</button>
+          <button id="clear-uid-btn" class="btn btn-secondary" style="padding:10px 16px;font-size:13px;" type="button">クリア</button>
+        </div>
+        <p id="uid-status" style="font-size:12px;color:var(--green);margin-top:6px;display:none;"></p>
+        <p style="font-size:11px;color:var(--text-light);margin-top:4px;">入力すると結果が保存され、<a href="history.html" style="color:var(--primary);">履歴画面</a>で過去の推移を確認できます。</p>
+      </div>
+
       <div class="track-grid">
         <div class="track-card" data-track="business" role="button" tabindex="0" aria-label="ビジネスユーザートラックを選択">
           <span class="track-icon">💼</span>
@@ -56,6 +70,34 @@
   <script src="js/selfcheck-app.js"></script>
   <script>
     SessionManager.init();
+
+    // Employee ID management
+    const uidInput = document.getElementById("user-id-input");
+    const uidStatus = document.getElementById("uid-status");
+    const savedUid = localStorage.getItem("selfcheck_user_id");
+    if (savedUid) {
+      uidInput.value = savedUid;
+      uidStatus.textContent = "✓ 保存済み: " + savedUid;
+      uidStatus.style.display = "block";
+    }
+
+    document.getElementById("save-uid-btn").addEventListener("click", () => {
+      const val = uidInput.value.trim();
+      if (val) {
+        localStorage.setItem("selfcheck_user_id", val);
+        uidStatus.textContent = "✓ 保存しました: " + val;
+        uidStatus.style.color = "var(--green)";
+        uidStatus.style.display = "block";
+      }
+    });
+
+    document.getElementById("clear-uid-btn").addEventListener("click", () => {
+      localStorage.removeItem("selfcheck_user_id");
+      uidInput.value = "";
+      uidStatus.textContent = "クリアしました";
+      uidStatus.style.color = "var(--text-light)";
+      uidStatus.style.display = "block";
+    });
 
     document.querySelectorAll(".track-card").forEach(card => {
       card.addEventListener("click", () => {

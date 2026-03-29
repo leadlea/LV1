@@ -35,16 +35,23 @@ async function apiFetch(path, options = {}) {
 }
 
 async function submitSelfcheck(sessionId, track, answers) {
+  const userId = localStorage.getItem("selfcheck_user_id");
   return apiFetch("/selfcheck/submit", {
     method: "POST",
     body: JSON.stringify({
       session_id: sessionId,
       track: track,
       answers: answers,
+      user_id: userId || null,
     }),
   });
 }
 
 async function getDefinitions() {
   return apiFetch("/selfcheck/definitions");
+}
+
+
+async function getHistory(userId) {
+  return apiFetch("/selfcheck/history?user_id=" + encodeURIComponent(userId));
 }

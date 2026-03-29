@@ -90,6 +90,16 @@ def handler(event, context):
         dynamodb = boto3.resource("dynamodb")
         table = dynamodb.Table(RESULTS_TABLE)
         table.put_item(Item=item)
+
+        # Also save USER# record if user_id is provided
+        user_id = body.get("user_id")
+        if user_id and isinstance(user_id, str) and user_id.strip():
+            user_item = {
+                **item,
+                "PK": f"USER#{user_id.strip()}",
+                "SK": f"RESULT#{completed_at}",
+            }
+            table.put_item(Item=user_item)
     except Exception:
         logger.exception("Failed to save result to DynamoDB")
         return _response(500, {"error": "Failed to save result. Please retry."})

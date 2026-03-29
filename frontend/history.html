@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>履歴 - AIスキルセルフチェック</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="favicon.ico">
+</head>
+<body>
+  <header class="header">
+    <img src="https://www.sojitz-ti.com/resources/images/common/logo_stechi.svg" alt="双日テックイノベーション" class="header-logo">
+    <nav class="nav">
+      <a href="index.html">ホーム</a>
+      <a href="history.html" class="active">履歴</a>
+      <a href="definitions.html">スキル定義</a>
+      <a href="competency.html">マップ</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div id="error-banner" class="error-banner"></div>
+
+    <div class="card">
+      <h2>📈 スキル推移・履歴</h2>
+      <p>従業員番号を入力して、過去のセルフチェック結果を確認できます。</p>
+      <div style="display:flex;gap:8px;margin-top:16px;align-items:center;">
+        <input type="text" id="history-uid" placeholder="従業員番号" style="flex:1;padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;outline:none;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+        <button id="search-btn" class="btn" style="padding:10px 20px;font-size:14px;" type="button">検索</button>
+      </div>
+    </div>
+
+    <div id="loading" class="loading" style="display:none;">
+      <div class="spinner"></div>
+      <p>履歴を取得中...</p>
+    </div>
+
+    <div id="results-area" style="display:none;">
+      <!-- Chart -->
+      <div class="card">
+        <h3>レベル推移</h3>
+        <canvas id="level-chart" style="width:100%;height:200px;"></canvas>
+        <div id="chart-fallback"></div>
+      </div>
+
+      <!-- Table -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h3 style="margin:0;">過去の結果一覧</h3>
+          <button id="csv-btn" class="btn btn-secondary" style="padding:8px 16px;font-size:13px;" type="button">📥 CSVダウンロード</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="level-table" id="history-table">
+            <thead>
+              <tr><th>日時</th><th>トラック</th><th>共通</th><th>トラック別</th><th>総合</th><th>レベル</th></tr>
+            </thead>
+            <tbody id="history-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="no-results" class="card" style="display:none;text-align:center;">
+      <p style="color:var(--text-light);padding:20px;">この従業員番号の履歴はまだありません。</p>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/selfcheck-app.js"></script>
+  <script>
+    SessionManager.init();
+    const savedUid = localStorage.getItem("selfcheck_user_id");
+    const uidInput = document.getElementById("history-uid");
+    if (savedUid) uidInput.value = savedUid;
+
+    let historyData = [];
+
+    document.getElementById("search-btn").addEventListener("click", loadHistory);
+    uidInput.addEventListener("keydown", (e) => { if (e.key === "Enter") loadHistory(); });
+
+    // Auto-load if uid exists
+    if (savedUid) loadHistory();
+
+    async function loadHistory() {
+      const uid = uidInput.value.trim();
+      if (!uid) { showError("従業員番号を入力してください。"); return; }
+
+      document.getElementById("loading").style.display = "block";
+      document.getElementById("results-area").style.display = "none";
+      document.getElementById("no-results").style.display = "none";
+
+      try {
+        const data = await getHistory(uid);
+        historyData = data.results || [];
+        document.getElementById("loading").style.display = "none";
+
+        if (historyData.length === 0) {
+          document.getElementById("no-results").style.display = "block";
+          return;
+        }
+
+        document.getElementById("results-area").style.display = "block";
+        renderTable(historyData);
+        renderChart(historyData);
+      } catch (err) {
+        document.getElementById("loading").style.display = "none";
+      }
+    }
+
+    function renderTable(results) {
+      const tbody = document.getElementById("history-body");
+      tbody.innerHTML = "";
+      results.forEach(r => {
+        const date = r.completed_at ? new Date(r.completed_at).toLocaleString("ja-JP") : "-";
+        const track = r.track === "business" ? "ビジネス" : "エンジニア";
+        const fmt = (v) => parseFloat(v).toFixed(2);
+        tbody.innerHTML += `<tr>
+          <td>${date}</td>
+          <td>${track}</td>
+          <td>${fmt(r.common_avg)}</td>
+          <td>${fmt(r.track_avg)}</td>
+          <td>${fmt(r.overall_avg)}</td>
+          <td style="font-weight:700;color:var(--primary);">${r.skill_level}</td>
+        </tr>`;
+      });
+    }
+
+    function renderChart(results) {
+      const container = document.getElementById("chart-fallback");
+      const canvas = document.getElementById("level-chart");
+
+      // Simple SVG line chart (no external library)
+      const levelToNum = { Lv1: 1, Lv2: 2, Lv3: 3, Lv4: 4, Lv5: 5 };
+      const points = results.map((r, i) => ({
+        x: i,
+        y: levelToNum[r.skill_level] || 1,
+        avg: parseFloat(r.overall_avg),
+        date: r.completed_at ? new Date(r.completed_at).toLocaleDateString("ja-JP") : "",
+        level: r.skill_level,
+      }));
+
+      canvas.style.display = "none";
+      const w = 700, h = 200, pad = 40;
+      const xStep = points.length > 1 ? (w - pad * 2) / (points.length - 1) : 0;
+
+      let svg = `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;font-family:'Noto Sans JP',sans-serif;">`;
+      // Grid lines
+      for (let lv = 1; lv <= 5; lv++) {
+        const y = h - pad - ((lv - 1) / 4) * (h - pad * 2);
+        svg += `<line x1="${pad}" y1="${y}" x2="${w - pad}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`;
+        svg += `<text x="${pad - 8}" y="${y + 4}" text-anchor="end" fill="#94a3b8" font-size="11">Lv${lv}</text>`;
+      }
+      // Line
+      if (points.length > 1) {
+        let pathD = points.map((p, i) => {
+          const x = pad + i * xStep;
+          const y = h - pad - ((p.y - 1) / 4) * (h - pad * 2);
+          return (i === 0 ? "M" : "L") + `${x},${y}`;
+        }).join(" ");
+        svg += `<path d="${pathD}" fill="none" stroke="#2563eb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+      }
+      // Dots + labels
+      points.forEach((p, i) => {
+        const x = pad + i * xStep;
+        const y = h - pad - ((p.y - 1) / 4) * (h - pad * 2);
+        svg += `<circle cx="${x}" cy="${y}" r="5" fill="#2563eb" stroke="#fff" stroke-width="2"/>`;
+        svg += `<text x="${x}" y="${h - 8}" text-anchor="middle" fill="#94a3b8" font-size="10">${p.date}</text>`;
+        svg += `<text x="${x}" y="${y - 12}" text-anchor="middle" fill="#2563eb" font-size="11" font-weight="600">${p.level}</text>`;
+      });
+      svg += `</svg>`;
+      container.innerHTML = svg;
+    }
+
+    // CSV Download
+    document.getElementById("csv-btn").addEventListener("click", () => {
+      if (historyData.length === 0) return;
+      const uid = uidInput.value.trim();
+      const header = "日時,トラック,共通スコア,トラック別スコア,総合スコア,レベル\n";
+      const rows = historyData.map(r => {
+        const date = r.completed_at || "";
+        const track = r.track === "business" ? "ビジネス" : "エンジニア";
+        return `${date},${track},${r.common_avg},${r.track_avg},${r.overall_avg},${r.skill_level}`;
+      }).join("\n");
+
+      const bom = "\uFEFF";
+      const blob = new Blob([bom + header + rows], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `selfcheck_history_${uid}_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
