@@ -8,10 +8,6 @@ provider:
     RESULTS_TABLE: ai-levels-results
     PROGRESS_TABLE: ai-levels-progress
     BEDROCK_MODEL_ID: jp.anthropic.claude-sonnet-4-6
-    PASS_THRESHOLD_LV1: "30"
-    PASS_THRESHOLD_LV2: "30"
-    PASS_THRESHOLD_LV3: "30"
-    PASS_THRESHOLD_LV4: "30"
   timeout: 60
   iam:
     role:
@@ -28,111 +24,25 @@ provider:
           Action:
             - bedrock:InvokeModel
           Resource: "*"
-        - Effect: Allow
-          Action:
-            - aws-marketplace:ViewSubscriptions
-            - aws-marketplace:Subscribe
-          Resource: "*"
 
 functions:
-  generate:
-    handler: backend/handlers/generate_handler.handler
+  selfcheckSubmit:
+    handler: backend/handlers/selfcheck_handler.handler
     events:
       - http:
-          path: lv1/generate
+          path: selfcheck/submit
           method: post
           cors: true
-  grade:
-    handler: backend/handlers/grade_handler.handler
+  selfcheckDefinitions:
+    handler: backend/handlers/definitions_handler.handler
     events:
       - http:
-          path: lv1/grade
-          method: post
-          cors: true
-  complete:
-    handler: backend/handlers/complete_handler.handler
-    events:
-      - http:
-          path: lv1/complete
-          method: post
-          cors: true
-  gate:
-    handler: backend/handlers/gate_handler.handler
-    events:
-      - http:
-          path: levels/status
+          path: selfcheck/definitions
           method: get
-          cors: true
-
-  lv2Generate:
-    handler: backend/handlers/lv2_generate_handler.handler
-    events:
-      - http:
-          path: lv2/generate
-          method: post
-          cors: true
-  lv2Grade:
-    handler: backend/handlers/lv2_grade_handler.handler
-    events:
-      - http:
-          path: lv2/grade
-          method: post
-          cors: true
-  lv2Complete:
-    handler: backend/handlers/lv2_complete_handler.handler
-    events:
-      - http:
-          path: lv2/complete
-          method: post
-          cors: true
-
-  lv3Generate:
-    handler: backend/handlers/lv3_generate_handler.handler
-    events:
-      - http:
-          path: lv3/generate
-          method: post
-          cors: true
-  lv3Grade:
-    handler: backend/handlers/lv3_grade_handler.handler
-    events:
-      - http:
-          path: lv3/grade
-          method: post
-          cors: true
-  lv3Complete:
-    handler: backend/handlers/lv3_complete_handler.handler
-    events:
-      - http:
-          path: lv3/complete
-          method: post
-          cors: true
-
-  lv4Generate:
-    handler: backend/handlers/lv4_generate_handler.handler
-    events:
-      - http:
-          path: lv4/generate
-          method: post
-          cors: true
-  lv4Grade:
-    handler: backend/handlers/lv4_grade_handler.handler
-    events:
-      - http:
-          path: lv4/grade
-          method: post
-          cors: true
-  lv4Complete:
-    handler: backend/handlers/lv4_complete_handler.handler
-    events:
-      - http:
-          path: lv4/complete
-          method: post
           cors: true
 
 resources:
   Resources:
-    # API Gateway のエラーレスポンスにCORSヘッダーを追加
     GatewayResponseDefault4XX:
       Type: AWS::ApiGateway::GatewayResponse
       Properties:

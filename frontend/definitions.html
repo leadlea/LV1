@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>スキル定義 - AIスキルセルフチェック</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="favicon.ico">
+</head>
+<body>
+  <header class="header">
+    <img src="https://www.sojitz-ti.com/resources/images/common/logo_stechi.svg" alt="双日テックイノベーション" class="header-logo">
+    <span class="header-title">AIスキルセルフチェック</span>
+    <nav class="nav">
+      <a href="index.html">ホーム</a>
+      <a href="definitions.html" class="active">スキル定義</a>
+      <a href="competency.html">コンピテンシーマップ</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h2>AIスキル定義（Lv1〜Lv5）</h2>
+      <div class="tabs">
+        <button class="tab active" data-tab="business">ビジネスユーザー</button>
+        <button class="tab" data-tab="engineer">エンジニア</button>
+      </div>
+
+      <div id="tab-business" class="tab-content active">
+        <table class="level-table">
+          <thead><tr><th>レベル</th><th>名称</th><th>説明</th></tr></thead>
+          <tbody id="business-body"></tbody>
+        </table>
+      </div>
+      <div id="tab-engineer" class="tab-content">
+        <table class="level-table">
+          <thead><tr><th>レベル</th><th>名称</th><th>説明</th></tr></thead>
+          <tbody id="engineer-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/selfcheck-app.js"></script>
+  <script>
+    SessionManager.init();
+
+    // Tab switching
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById("tab-" + tab.dataset.tab).classList.add("active");
+      });
+    });
+
+    // Default to selected track
+    const track = SessionManager.getTrack();
+    if (track === "engineer") {
+      document.querySelector('.tab[data-tab="engineer"]').click();
+    }
+
+    // Load definitions
+    async function loadDefinitions() {
+      try {
+        const data = await getDefinitions();
+        renderLevels("business-body", data.business);
+        renderLevels("engineer-body", data.engineer);
+      } catch {
+        // Fallback: use static data
+        renderStaticFallback();
+      }
+    }
+
+    function renderLevels(tbodyId, levels) {
+      const tbody = document.getElementById(tbodyId);
+      tbody.innerHTML = "";
+      for (const [lv, info] of Object.entries(levels)) {
+        tbody.innerHTML += `<tr><td>${lv}</td><td>${info.name}</td><td>${info.description}</td></tr>`;
+      }
+    }
+
+    function renderStaticFallback() {
+      const biz = {
+        Lv1: { name: "安全利用の基本者", description: "生成AIの基本を理解し、安全に利用できる" },
+        Lv2: { name: "効率化実践者", description: "生成AIを業務効率化に活用できる" },
+        Lv3: { name: "能力増幅実践者", description: "生成AIで自身の能力を増幅し成果を出せる" },
+        Lv4: { name: "他者貢献・再利用化", description: "AI活用ノウハウを他者に展開し再利用可能にできる" },
+        Lv5: { name: "変革リーダー", description: "AIを活用した業務変革をリードできる" },
+      };
+      const eng = {
+        Lv1: { name: "エントリー", description: "AI支援ツールの基本操作ができる" },
+        Lv2: { name: "基礎の自走", description: "AIを活用した開発を自走できる" },
+        Lv3: { name: "自立実装", description: "AIを活用した設計・実装を自立して行える" },
+        Lv4: { name: "社内リード", description: "AI技術の社内導入をリードできる" },
+        Lv5: { name: "社内ハイエンド", description: "AI技術の最先端を社内に展開できる" },
+      };
+      renderLevels("business-body", biz);
+      renderLevels("engineer-body", eng);
+    }
+
+    loadDefinitions();
+  </script>
+</body>
+</html>

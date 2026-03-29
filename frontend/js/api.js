@@ -1,235 +1,50 @@
 /**
- * API クライアント - バックエンドAPIとの通信を担当
- * 認証なし（Lv1はログイン不要）
+ * API通信層 - セルフチェックシステム
  */
-const ApiClient = (() => {
-  // API Gateway のベースURL（デプロイ後に設定）
-  const BASE_URL = window.API_BASE_URL || "";
 
-  /**
-   * 共通 fetch ラッパー
-   * @param {string} path - エンドポイントパス
-   * @param {object} options - fetch オプション
-   * @returns {Promise<object>} レスポンスJSON
-   */
-  async function request(path, options = {}) {
-    const url = `${BASE_URL}${path}`;
-    const defaultHeaders = { "Content-Type": "application/json" };
+function showError(msg) {
+  const banner = document.getElementById("error-banner");
+  if (banner) {
+    banner.textContent = msg;
+    banner.classList.add("show");
+  }
+}
 
-    const res = await fetch(url, {
+function hideError() {
+  const banner = document.getElementById("error-banner");
+  if (banner) banner.classList.remove("show");
+}
+
+async function apiFetch(path, options = {}) {
+  hideError();
+  const url = window.API_BASE_URL + path;
+  try {
+    const resp = await fetch(url, {
+      headers: { "Content-Type": "application/json" },
       ...options,
-      headers: { ...defaultHeaders, ...options.headers },
     });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      const err = new Error(data.error || `HTTP ${res.status}`);
-      err.status = res.status;
-      err.data = data;
-      throw err;
+    const data = await resp.json();
+    if (!resp.ok) {
+      throw new Error(data.error || `HTTP ${resp.status}`);
     }
-
     return data;
+  } catch (err) {
+    showError(err.message || "通信エラーが発生しました。接続を確認してください。");
+    throw err;
   }
+}
 
-  /**
-   * POST /lv1/generate - テスト・ドリル生成
-   * @param {string} sessionId
-   * @returns {Promise<{session_id: string, questions: Array}>}
-   */
-  function generate(sessionId) {
-    return request("/lv1/generate", {
-      method: "POST",
-      body: JSON.stringify({ session_id: sessionId }),
-    });
-  }
+async function submitSelfcheck(sessionId, track, answers) {
+  return apiFetch("/selfcheck/submit", {
+    method: "POST",
+    body: JSON.stringify({
+      session_id: sessionId,
+      track: track,
+      answers: answers,
+    }),
+  });
+}
 
-  /**
-   * POST /lv1/grade - 回答採点+レビュー
-   * @param {string} sessionId
-   * @param {number} step
-   * @param {object} question
-   * @param {string} answer
-   * @returns {Promise<{session_id: string, step: number, passed: boolean, score: number, feedback: string, explanation: string}>}
-   */
-  function grade(sessionId, step, question, answer) {
-    return request("/lv1/grade", {
-      method: "POST",
-      body: JSON.stringify({ session_id: sessionId, step, question, answer }),
-    });
-  }
-
-  /**
-   * POST /lv1/complete - 完了レコード保存
-   * @param {object} payload - { session_id, questions, answers, grades, final_passed }
-   * @returns {Promise<{saved: boolean, record_id: string}>}
-   */
-  function complete(payload) {
-    return request("/lv1/complete", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  }
-
-  /**
-   * GET /levels/status - レベル合格状態取得
-   * @param {string} sessionId
-   * @returns {Promise<{levels: object}>}
-   */
-  function getLevelsStatus(sessionId) {
-    return request(`/levels/status?session_id=${encodeURIComponent(sessionId)}`);
-  }
-
-  /**
-   * エラーバナーを表示する
-   * @param {string} message - エラーメッセージ
-   * @param {Function} onRetry - リトライ時のコールバック
-   */
-  function showError(message, onRetry) {
-    const banner = document.getElementById("error-banner");
-    const msgEl = document.getElementById("error-message");
-    const retryBtn = document.getElementById("error-retry-btn");
-
-    if (!banner || !msgEl) return;
-
-    msgEl.textContent = message;
-    banner.hidden = false;
-
-    if (retryBtn && onRetry) {
-      const newBtn = retryBtn.cloneNode(true);
-      retryBtn.parentNode.replaceChild(newBtn, retryBtn);
-      newBtn.addEventListener("click", () => {
-        banner.hidden = true;
-        onRetry();
-      });
-    }
-  }
-
-  /**
-   * エラーバナーを非表示にする
-   */
-  function hideError() {
-    const banner = document.getElementById("error-banner");
-    if (banner) banner.hidden = true;
-  }
-
-  /**
-   * POST /lv2/generate - Lv2ケーススタディ生成
-   * @param {string} sessionId
-   * @returns {Promise<{session_id: string, questions: Array}>}
-   */
-  function lv2Generate(sessionId) {
-    return request("/lv2/generate", {
-      method: "POST",
-      body: JSON.stringify({ session_id: sessionId }),
-    });
-  }
-
-  /**
-   * POST /lv2/grade - Lv2回答採点+レビュー
-   * @param {string} sessionId
-   * @param {number} step
-   * @param {object} question
-   * @param {string} answer
-   * @returns {Promise<{session_id: string, step: number, passed: boolean, score: number, feedback: string, explanation: string}>}
-   */
-  function lv2Grade(sessionId, step, question, answer) {
-    return request("/lv2/grade", {
-      method: "POST",
-      body: JSON.stringify({ session_id: sessionId, step, question, answer }),
-    });
-  }
-
-  /**
-   * POST /lv2/complete - Lv2完了レコード保存
-   * @param {object} payload - { session_id, questions, answers, grades, final_passed }
-   * @returns {Promise<{saved: boolean, record_id: string}>}
-   */
-  function lv2Complete(payload) {
-    return request("/lv2/complete", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  }
-
-  /**
-   * POST /lv3/generate - Lv3プロジェクトリーダーシップシナリオ生成
-   * @param {string} sessionId
-   * @returns {Promise<{session_id: string, questions: Array}>}
-   */
-  function lv3Generate(sessionId) {
-    return request("/lv3/generate", {
-      method: "POST",
-      body: JSON.stringify({ session_id: sessionId }),
-    });
-  }
-
-  /**
-   * POST /lv3/grade - Lv3回答採点+レビュー
-   * @param {string} sessionId
-   * @param {number} step
-   * @param {object} question
-   * @param {string} answer
-   * @returns {Promise<{session_id: string, step: number, passed: boolean, score: number, feedback: string, explanation: string}>}
-   */
-  function lv3Grade(sessionId, step, question, answer) {
-    return request("/lv3/grade", {
-      method: "POST",
-      body: JSON.stringify({ session_id: sessionId, step, question, answer }),
-    });
-  }
-
-  /**
-   * POST /lv3/complete - Lv3完了レコード保存
-   * @param {object} payload - { session_id, questions, answers, grades, final_passed }
-   * @returns {Promise<{saved: boolean, record_id: string}>}
-   */
-  function lv3Complete(payload) {
-    return request("/lv3/complete", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  }
-
-  /**
-   * POST /lv4/generate - Lv4組織横断ガバナンスシナリオ生成
-   * @param {string} sessionId
-   * @returns {Promise<{session_id: string, questions: Array}>}
-   */
-  function lv4Generate(sessionId) {
-    return request("/lv4/generate", {
-      method: "POST",
-      body: JSON.stringify({ session_id: sessionId }),
-    });
-  }
-
-  /**
-   * POST /lv4/grade - Lv4回答採点+レビュー
-   * @param {string} sessionId
-   * @param {number} step
-   * @param {object} question
-   * @param {string} answer
-   * @returns {Promise<{session_id: string, step: number, passed: boolean, score: number, feedback: string, explanation: string}>}
-   */
-  function lv4Grade(sessionId, step, question, answer) {
-    return request("/lv4/grade", {
-      method: "POST",
-      body: JSON.stringify({ session_id: sessionId, step, question, answer }),
-    });
-  }
-
-  /**
-   * POST /lv4/complete - Lv4完了レコード保存
-   * @param {object} payload - { session_id, questions, answers, grades, final_passed }
-   * @returns {Promise<{saved: boolean, record_id: string}>}
-   */
-  function lv4Complete(payload) {
-    return request("/lv4/complete", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  }
-
-  return { generate, grade, complete, getLevelsStatus, lv2Generate, lv2Grade, lv2Complete, lv3Generate, lv3Grade, lv3Complete, lv4Generate, lv4Grade, lv4Complete, showError, hideError };
-})();
+async function getDefinitions() {
+  return apiFetch("/selfcheck/definitions");
+}

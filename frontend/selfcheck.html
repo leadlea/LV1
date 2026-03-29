@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>セルフチェック - AIスキルセルフチェック</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="favicon.ico">
+</head>
+<body>
+  <header class="header">
+    <img src="https://www.sojitz-ti.com/resources/images/common/logo_stechi.svg" alt="双日テックイノベーション" class="header-logo">
+    <span class="header-title">AIスキルセルフチェック</span>
+    <nav class="nav">
+      <a href="index.html">ホーム</a>
+      <a href="definitions.html">スキル定義</a>
+      <a href="competency.html">コンピテンシーマップ</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div id="error-banner" class="error-banner"></div>
+
+    <div class="card">
+      <h2 id="check-title">セルフチェック</h2>
+      <p>各項目について、あなたの現在のスキルレベルを0〜4で自己評価してください。</p>
+    </div>
+
+    <div class="card">
+      <div id="check-items"></div>
+    </div>
+
+    <div style="text-align:center;margin:24px 0;">
+      <button id="submit-btn" class="btn" type="button">送信する</button>
+    </div>
+
+    <div id="loading" class="loading" style="display:none;">
+      <div class="spinner"></div>
+      <p>結果を計算中...</p>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/selfcheck-app.js"></script>
+  <script>
+    const session = SessionManager.init();
+    const params = new URLSearchParams(window.location.search);
+    const track = params.get("track") || SessionManager.getTrack();
+
+    if (!track || !["business", "engineer"].includes(track)) {
+      window.location.href = "index.html";
+    } else {
+      SessionManager.setTrack(track);
+      const trackLabel = track === "business" ? "ビジネスユーザー" : "エンジニア";
+      document.getElementById("check-title").textContent = `セルフチェック（${trackLabel}）`;
+      renderCheckItems("check-items", track);
+    }
+
+    document.getElementById("submit-btn").addEventListener("click", async () => {
+      const answers = collectAnswers();
+      if (!answers) {
+        showError("未回答の項目があります。すべての項目に回答してください。");
+        document.querySelector(".check-item.error")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      showLoading(true);
+      try {
+        const result = await submitSelfcheck(SessionManager.getSessionId(), track, answers);
+        sessionStorage.setItem("selfcheck_result", JSON.stringify(result));
+        window.location.href = "result.html";
+      } catch (err) {
+        showLoading(false);
+      }
+    });
+  </script>
+</body>
+</html>

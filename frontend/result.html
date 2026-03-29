@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>結果 - AIスキルセルフチェック</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="favicon.ico">
+</head>
+<body>
+  <header class="header">
+    <img src="https://www.sojitz-ti.com/resources/images/common/logo_stechi.svg" alt="双日テックイノベーション" class="header-logo">
+    <span class="header-title">AIスキルセルフチェック</span>
+    <nav class="nav">
+      <a href="index.html">ホーム</a>
+      <a href="definitions.html">スキル定義</a>
+      <a href="competency.html">コンピテンシーマップ</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div class="card" style="text-align:center;">
+      <h2>あなたのAIスキルレベル</h2>
+      <div id="level-display">
+        <div class="level-badge" id="level-badge">-</div>
+        <div class="level-name" id="level-name"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>スコア詳細</h3>
+      <div class="score-bar-container">
+        <div class="score-bar-label"><span>共通スコア</span><span id="common-score">-</span></div>
+        <div class="score-bar"><div class="score-bar-fill" id="common-bar" style="width:0%"></div></div>
+      </div>
+      <div class="score-bar-container">
+        <div class="score-bar-label"><span id="track-label">トラック別スコア</span><span id="track-score">-</span></div>
+        <div class="score-bar"><div class="score-bar-fill" id="track-bar" style="width:0%"></div></div>
+      </div>
+      <div class="score-bar-container">
+        <div class="score-bar-label"><span>総合スコア</span><span id="overall-score">-</span></div>
+        <div class="score-bar"><div class="score-bar-fill" id="overall-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="card" id="feedback-card">
+      <h3>AIフィードバック</h3>
+      <div id="feedback-content"></div>
+    </div>
+
+    <div style="text-align:center;margin:24px 0;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <a href="definitions.html" class="btn btn-secondary">スキル定義を見る</a>
+      <a href="index.html" class="btn">もう一度チェックする</a>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/selfcheck-app.js"></script>
+  <script>
+    SessionManager.init();
+    const result = JSON.parse(sessionStorage.getItem("selfcheck_result") || "null");
+    if (!result) { window.location.href = "index.html"; }
+    else { renderResult(result); }
+
+    function renderResult(r) {
+      document.getElementById("level-badge").textContent = r.skill_level;
+      const track = r.track === "business" ? "ビジネスユーザー" : "エンジニア";
+      document.getElementById("track-label").textContent = track + "スコア";
+
+      const fmt = (v) => (typeof v === "number" ? v.toFixed(2) : v);
+      document.getElementById("common-score").textContent = fmt(r.common_avg) + " / 4.00";
+      document.getElementById("track-score").textContent = fmt(r.track_avg) + " / 4.00";
+      document.getElementById("overall-score").textContent = fmt(r.overall_avg) + " / 4.00";
+
+      setTimeout(() => {
+        document.getElementById("common-bar").style.width = (r.common_avg / 4 * 100) + "%";
+        document.getElementById("track-bar").style.width = (r.track_avg / 4 * 100) + "%";
+        document.getElementById("overall-bar").style.width = (r.overall_avg / 4 * 100) + "%";
+      }, 100);
+
+      // Feedback
+      const fc = document.getElementById("feedback-content");
+      if (r.feedback && !r.feedback_unavailable) {
+        fc.innerHTML = `
+          <div class="feedback-section"><h4>💪 強み</h4><p>${r.feedback.strengths}</p></div>
+          <div class="feedback-section"><h4>📈 改善ポイント</h4><p>${r.feedback.improvements}</p></div>
+          <div class="feedback-section"><h4>🎯 次のアクション</h4><p>${r.feedback.next_actions}</p></div>
+        `;
+      } else {
+        fc.innerHTML = '<div class="feedback-unavailable">フィードバックは現在取得できません。スコアとレベル判定をご確認ください。</div>';
+      }
+    }
+  </script>
+</body>
+</html>

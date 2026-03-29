@@ -3,534 +3,66 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Levels - レベル選択</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>AIスキルセルフチェック</title>
   <link rel="stylesheet" href="css/style.css">
-  <style>
-    /* === Index Full-Screen Layout === */
-    .index-body {
-      font-family: "Noto Sans JP", -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #f0f2f5;
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      font-size: 16px;
-    }
-
-    /* --- Top Header Bar --- */
-    .index-topbar {
-      background: #4a7c9b;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 1.5rem;
-      height: 56px;
-      flex-shrink: 0;
-    }
-
-    .index-topbar__left {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .index-topbar__hamburger {
-      background: none;
-      border: none;
-      color: #fff;
-      font-size: 1.5rem;
-      cursor: pointer;
-      padding: 0.25rem;
-      line-height: 1;
-    }
-
-    .index-topbar__logo {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .index-topbar__logo-icon {
-      font-size: 1.3rem;
-    }
-
-    .index-topbar__logo-text {
-      font-size: 1.2rem;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-    }
-
-    .index-topbar__user {
-      width: 38px;
-      height: 38px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-    }
-
-    /* --- Main Layout (sidebar + content + detail) --- */
-    .index-layout {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
-    }
-
-    /* --- Left Sidebar --- */
-    .index-sidebar {
-      width: 220px;
-      background: #e8ecef;
-      border-right: 1px solid #d1d5db;
-      padding: 1.5rem 1.25rem;
-      flex-shrink: 0;
-      overflow-y: auto;
-    }
-
-    .index-sidebar__title {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #6b7280;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 1rem;
-    }
-
-    .index-sidebar__item {
-      display: block;
-      padding: 0.6rem 0.75rem;
-      margin-bottom: 0.25rem;
-      border-radius: 6px;
-      font-size: 0.95rem;
-      color: #374151;
-      text-decoration: none;
-      font-weight: 500;
-      transition: background 0.12s ease;
-    }
-
-    .index-sidebar__item:hover {
-      background: rgba(0,0,0,0.06);
-    }
-
-    .index-sidebar__item--active {
-      background: #fff;
-      color: #1a2332;
-      font-weight: 600;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    }
-
-    /* --- Center Content --- */
-    .index-content {
-      flex: 1;
-      padding: 2rem 2.5rem;
-      overflow-y: auto;
-    }
-
-    .index-content__header {
-      margin-bottom: 1.5rem;
-    }
-
-    .index-content__header h1 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #1a2332;
-      margin-bottom: 0.3rem;
-    }
-
-    .index-content__header .subtitle {
-      color: #6b7280;
-      font-size: 1rem;
-    }
-
-    /* Level list (card rows) */
-    .index-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-    }
-
-    .index-row {
-      display: flex;
-      align-items: center;
-      gap: 1.25rem;
-      padding: 1.25rem 1.5rem;
-      background: #fff;
-      border-bottom: 1px solid #e5e7eb;
-      transition: background 0.12s ease;
-    }
-
-    .index-row:first-child {
-      border-radius: 10px 10px 0 0;
-    }
-
-    .index-row:last-child {
-      border-bottom: none;
-      border-radius: 0 0 10px 10px;
-    }
-
-    .index-row:only-child {
-      border-radius: 10px;
-    }
-
-    .index-row.level-card--unlocked:hover {
-      background: #f8fafc;
-    }
-
-    .index-row.level-card--locked {
-      opacity: 0.45;
-    }
-
-    .index-row .level-card__badge {
-      background: #4a7c9b;
-      color: #fff;
-      font-size: 0.85rem;
-      font-weight: 700;
-      padding: 0.5rem 0.85rem;
-      border-radius: 8px;
-      min-width: 48px;
-      text-align: center;
-      flex-shrink: 0;
-    }
-
-    .index-row.level-card--locked .level-card__badge {
-      background: #d1d5db;
-      color: #6b7280;
-    }
-
-    .index-row__info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .index-row .level-card__title {
-      font-size: 1.05rem;
-      font-weight: 600;
-      color: #1a2332;
-      margin-bottom: 0.2rem;
-    }
-
-    .index-row .level-card__desc {
-      font-size: 0.9rem;
-      color: #6b7280;
-      line-height: 1.5;
-    }
-
-    .index-row .level-card__lock {
-      font-size: 1.3rem;
-      flex-shrink: 0;
-    }
-
-    .index-row .level-card__status {
-      font-size: 0.9rem;
-      font-weight: 600;
-      flex-shrink: 0;
-    }
-
-    .index-row .level-card__status--passed {
-      color: #059669;
-    }
-
-    .index-row .level-card__btn {
-      display: inline-block;
-      padding: 0.55rem 1.5rem;
-      background: #4a7c9b;
-      color: #fff;
-      text-decoration: none;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      transition: background 0.15s ease;
-      flex-shrink: 0;
-      white-space: nowrap;
-    }
-
-    .index-row .level-card__btn:hover {
-      background: #3d6a85;
-    }
-
-    /* --- Right Detail Panel --- */
-    .index-detail {
-      width: 300px;
-      background: #fff;
-      border-left: 1px solid #e5e7eb;
-      padding: 2rem 1.5rem;
-      flex-shrink: 0;
-      overflow-y: auto;
-    }
-
-    .index-detail__header {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .index-detail__icon {
-      width: 48px;
-      height: 48px;
-      background: #e8ecef;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      flex-shrink: 0;
-    }
-
-    .index-detail__title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #1a2332;
-    }
-
-    .index-detail__subtitle {
-      font-size: 0.85rem;
-      color: #6b7280;
-    }
-
-    .index-detail__section {
-      margin-bottom: 1.25rem;
-    }
-
-    .index-detail__label {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #9ca3af;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 0.4rem;
-    }
-
-    .index-detail__value {
-      font-size: 0.95rem;
-      color: #374151;
-      background: #f7f8fa;
-      padding: 0.6rem 0.85rem;
-      border-radius: 6px;
-      border: 1px solid #e5e7eb;
-    }
-
-    .index-detail__actions {
-      display: flex;
-      gap: 0.75rem;
-      margin-top: 1.5rem;
-    }
-
-    .index-detail__btn-secondary {
-      flex: 1;
-      padding: 0.6rem;
-      background: #f0f2f5;
-      color: #374151;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      cursor: pointer;
-      text-align: center;
-      text-decoration: none;
-      transition: background 0.12s ease;
-    }
-
-    .index-detail__btn-secondary:hover {
-      background: #e5e7eb;
-    }
-
-    .index-detail__btn-primary {
-      flex: 1;
-      padding: 0.6rem;
-      background: #4a7c9b;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      cursor: pointer;
-      text-align: center;
-      text-decoration: none;
-      transition: background 0.12s ease;
-    }
-
-    .index-detail__btn-primary:hover {
-      background: #3d6a85;
-    }
-
-    /* Error banner */
-    .index-error {
-      margin: 1.5rem 0;
-      padding: 1rem 1.5rem;
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      border-radius: 8px;
-      text-align: center;
-    }
-
-    .index-error p {
-      color: #b91c1c;
-      margin-bottom: 0.75rem;
-      font-size: 0.95rem;
-    }
-
-    .index-error .btn--retry {
-      background: #dc2626;
-      color: #fff;
-      border: none;
-      padding: 0.5rem 1.25rem;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      cursor: pointer;
-    }
-
-    .index-error .btn--retry:hover {
-      background: #b91c1c;
-    }
-
-    /* Footer inside content */
-    .index-footer {
-      text-align: center;
-      padding: 2rem 0 0.5rem;
-      color: #9ca3af;
-      font-size: 0.8rem;
-    }
-
-    /* --- Responsive --- */
-    @media (max-width: 1024px) {
-      .index-detail {
-        display: none;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .index-sidebar {
-        display: none;
-      }
-      .index-content {
-        padding: 1.5rem 1rem;
-      }
-    }
-  </style>
+  <link rel="icon" href="favicon.ico">
 </head>
-<body class="index-body">
-  <!-- Top Header Bar -->
-  <header class="index-topbar">
-    <div class="index-topbar__left">
-      <button class="index-topbar__hamburger" aria-label="メニュー">☰</button>
-      <div class="index-topbar__logo">
-        <span class="index-topbar__logo-icon">▶</span>
-        <span class="index-topbar__logo-text">AI Levels</span>
-      </div>
-    </div>
-    <div class="index-topbar__user" aria-label="ユーザー">👤</div>
+<body>
+  <header class="header">
+    <img src="https://www.sojitz-ti.com/resources/images/common/logo_stechi.svg" alt="双日テックイノベーション" class="header-logo">
+    <span class="header-title">AIスキルセルフチェック</span>
+    <nav class="nav">
+      <a href="index.html" class="active">ホーム</a>
+      <a href="definitions.html">スキル定義</a>
+      <a href="competency.html">コンピテンシーマップ</a>
+    </nav>
   </header>
 
-  <!-- 3-Column Layout -->
-  <div class="index-layout">
-    <!-- Left Sidebar -->
-    <aside class="index-sidebar">
-      <p class="index-sidebar__title">メニュー</p>
-      <a href="#" class="index-sidebar__item index-sidebar__item--active">カリキュラム一覧</a>
-      <a href="#" class="index-sidebar__item">学習履歴</a>
-      <a href="#" class="index-sidebar__item">設定</a>
-    </aside>
-
-    <!-- Center Content -->
-    <div class="index-content">
-      <div class="index-content__header header">
-        <h1>AI Levels</h1>
-        <p class="subtitle">AIカリキュラム学習プラットフォーム</p>
-      </div>
-
-      <main class="index-list levels-grid" id="levels-grid">
-        <div class="index-row level-card level-card--unlocked" id="level-lv1" data-level="lv1">
-          <div class="level-card__badge">Lv1</div>
-          <div class="index-row__info">
-            <h2 class="level-card__title">分業設計×依頼設計×品質担保×2ケース再現</h2>
-            <p class="level-card__desc">AIエージェントと連動したカリキュラムで基礎力を確認します。</p>
-          </div>
-          <div class="level-card__status" id="status-lv1"></div>
-          <a href="lv1.html" class="level-card__btn">開始する</a>
-        </div>
-
-        <div class="index-row level-card level-card--locked" id="level-lv2" data-level="lv2" hidden>
-          <div class="level-card__badge">Lv2</div>
-          <div class="index-row__info">
-            <h2 class="level-card__title">業務プロセス設計×AI実行指示×成果物検証×改善サイクル</h2>
-            <p class="level-card__desc">ケーススタディ形式で実践的なAI活用力を確認します。</p>
-          </div>
-          <div class="level-card__status" id="status-lv2"></div>
-          <a href="lv2.html" class="level-card__btn">開始する</a>
-        </div>
-
-        <div class="index-row level-card level-card--locked" id="level-lv3" data-level="lv3" hidden>
-          <div class="level-card__badge">Lv3</div>
-          <div class="index-row__info">
-            <h2 class="level-card__title">AI活用プロジェクトリーダーシップ×チームAI戦略策定×AI導入計画立案×スキル育成計画×ROI評価改善</h2>
-            <p class="level-card__desc">プロジェクトリーダーシップシナリオ形式で組織レベルのAI活用力を確認します。</p>
-          </div>
-          <div class="level-card__status" id="status-lv3"></div>
-          <a href="lv3.html" class="level-card__btn">開始する</a>
-        </div>
-
-        <div class="index-row level-card level-card--locked" id="level-lv4" data-level="lv4" hidden>
-          <div class="level-card__badge">Lv4</div>
-          <div class="index-row__info">
-            <h2 class="level-card__title">組織横断AI活用標準化×ガバナンス設計×持続的AI活用文化構築</h2>
-            <p class="level-card__desc">組織横断ガバナンスシナリオ形式で組織全体のAI活用推進力を確認します。</p>
-          </div>
-          <div class="level-card__status" id="status-lv4"></div>
-          <a href="lv4.html" class="level-card__btn">開始する</a>
-        </div>
-      </main>
-
-      <div class="index-error error-banner" id="error-banner" hidden>
-        <p id="error-message"></p>
-        <button id="error-retry-btn" class="btn btn--retry">リトライ</button>
-      </div>
-
-      <footer class="index-footer">
-        Powered by Amazon Bedrock &amp; Claude Sonnet 4.6
-      </footer>
+  <div class="container">
+    <div class="hero">
+      <h1>AIスキルセルフチェック</h1>
+      <p>あなたのAI活用スキルを自己評価し、現在のレベルとフィードバックを確認しましょう。</p>
     </div>
 
-    <!-- Right Detail Panel -->
-    <aside class="index-detail">
-      <div class="index-detail__header">
-        <div class="index-detail__icon">📋</div>
-        <div>
-          <div class="index-detail__title">Lv1 概要</div>
-          <div class="index-detail__subtitle">カリキュラム詳細</div>
+    <div class="card">
+      <h2>トラックを選択してください</h2>
+      <p>あなたの職種に合ったトラックを選んでセルフチェックを開始します。</p>
+      <div class="track-grid">
+        <div class="track-card" data-track="business" role="button" tabindex="0" aria-label="ビジネスユーザートラックを選択">
+          <h3>💼 ビジネスユーザー</h3>
+          <p>営業・企画・管理など、AIを業務効率化に活用する方向け</p>
+        </div>
+        <div class="track-card" data-track="engineer" role="button" tabindex="0" aria-label="エンジニアトラックを選択">
+          <h3>💻 エンジニア</h3>
+          <p>開発・インフラ・データ分析など、AI技術を実装に活用する方向け</p>
         </div>
       </div>
-
-      <div class="index-detail__section">
-        <p class="index-detail__label">出題形式</p>
-        <div class="index-detail__value">選択式 / 自由記述 / シナリオ</div>
-      </div>
-
-      <div class="index-detail__section">
-        <p class="index-detail__label">設問数</p>
-        <div class="index-detail__value">3問（AI自動生成）</div>
-      </div>
-
-      <div class="index-detail__section">
-        <p class="index-detail__label">所要時間</p>
-        <div class="index-detail__value">約10〜15分</div>
-      </div>
-
-      <div class="index-detail__actions">
-        <a href="#" class="index-detail__btn-secondary">詳細を見る</a>
-        <a href="lv1.html" class="index-detail__btn-primary">開始する</a>
-      </div>
-    </aside>
+      <div id="track-error" style="color:var(--error);margin-top:12px;display:none;">トラックを選択してください。</div>
+    </div>
   </div>
 
   <script src="js/config.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/gate.js"></script>
+  <script src="js/selfcheck-app.js"></script>
+  <script>
+    SessionManager.init();
+    let selectedTrack = null;
+
+    document.querySelectorAll(".track-card").forEach(card => {
+      card.addEventListener("click", () => {
+        document.querySelectorAll(".track-card").forEach(c => c.classList.remove("selected"));
+        card.classList.add("selected");
+        selectedTrack = card.dataset.track;
+        document.getElementById("track-error").style.display = "none";
+        SessionManager.setTrack(selectedTrack);
+        // 少し待ってから遷移
+        setTimeout(() => {
+          window.location.href = "selfcheck.html?track=" + selectedTrack;
+        }, 300);
+      });
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); card.click(); }
+      });
+    });
+  </script>
 </body>
 </html>
