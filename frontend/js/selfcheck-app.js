@@ -146,3 +146,49 @@ function showLoading(show) {
   const btn = document.getElementById("submit-btn");
   if (btn) btn.disabled = show;
 }
+
+/**
+ * 共通項目とトラック別項目を別コンテナに分割レンダリング
+ */
+function renderCheckItemsSplit(commonContainerId, trackContainerId, track) {
+  const commonContainer = document.getElementById(commonContainerId);
+  const trackContainer = document.getElementById(trackContainerId);
+  if (!commonContainer || !trackContainer) return;
+
+  const trackItems = track === "business" ? BUSINESS_ITEMS : ENGINEER_ITEMS;
+
+  function renderItems(container, items, startIdx) {
+    container.innerHTML = "";
+    items.forEach((item, i) => {
+      const num = startIdx + i + 1;
+      const div = document.createElement("div");
+      div.className = "check-item";
+      div.dataset.itemId = item.id;
+
+      const ratingHtml = RATING_LABELS.map(r =>
+        `<label class="rating-label" data-value="${r.value}">
+          <span class="score">${r.value}</span>
+          <span class="label">${r.label}</span>
+        </label>`
+      ).join("");
+
+      div.innerHTML = `
+        <div class="check-item-text"><span class="check-item-num">${num}</span>${item.text}</div>
+        <div class="rating-group">${ratingHtml}</div>
+      `;
+      container.appendChild(div);
+    });
+
+    container.querySelectorAll(".rating-label").forEach(label => {
+      label.addEventListener("click", () => {
+        const group = label.closest(".rating-group");
+        group.querySelectorAll(".rating-label").forEach(l => l.classList.remove("selected"));
+        label.classList.add("selected");
+        label.closest(".check-item").classList.remove("error");
+      });
+    });
+  }
+
+  renderItems(commonContainer, COMMON_ITEMS, 0);
+  renderItems(trackContainer, trackItems, 6);
+}

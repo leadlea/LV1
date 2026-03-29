@@ -10,20 +10,21 @@
 <body>
   <header class="header">
     <img src="https://www.sojitz-ti.com/resources/images/common/logo_stechi.svg" alt="双日テックイノベーション" class="header-logo">
-    <span class="header-title">AIスキルセルフチェック</span>
     <nav class="nav">
       <a href="index.html">ホーム</a>
       <a href="definitions.html" class="active">スキル定義</a>
-      <a href="competency.html">コンピテンシーマップ</a>
+      <a href="competency.html">マップ</a>
     </nav>
   </header>
 
   <div class="container">
     <div class="card">
-      <h2>AIスキル定義（Lv1〜Lv5）</h2>
-      <div class="tabs">
-        <button class="tab active" data-tab="business">ビジネスユーザー</button>
-        <button class="tab" data-tab="engineer">エンジニア</button>
+      <h2>📖 AIスキル定義（Lv1〜Lv5）</h2>
+      <p>各レベルに求められるスキルの概要です。セルフチェック結果と照らし合わせてご確認ください。</p>
+
+      <div class="tabs" style="margin-top:20px;">
+        <button class="tab active" data-tab="business">💼 ビジネスユーザー</button>
+        <button class="tab" data-tab="engineer">💻 エンジニア</button>
       </div>
 
       <div id="tab-business" class="tab-content active">
@@ -47,7 +48,6 @@
   <script>
     SessionManager.init();
 
-    // Tab switching
     document.querySelectorAll(".tab").forEach(tab => {
       tab.addEventListener("click", () => {
         document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
@@ -57,29 +57,24 @@
       });
     });
 
-    // Default to selected track
     const track = SessionManager.getTrack();
     if (track === "engineer") {
       document.querySelector('.tab[data-tab="engineer"]').click();
     }
 
-    // Load definitions
     async function loadDefinitions() {
       try {
         const data = await getDefinitions();
         renderLevels("business-body", data.business);
         renderLevels("engineer-body", data.engineer);
-      } catch {
-        // Fallback: use static data
-        renderStaticFallback();
-      }
+      } catch { renderStaticFallback(); }
     }
 
     function renderLevels(tbodyId, levels) {
       const tbody = document.getElementById(tbodyId);
       tbody.innerHTML = "";
       for (const [lv, info] of Object.entries(levels)) {
-        tbody.innerHTML += `<tr><td>${lv}</td><td>${info.name}</td><td>${info.description}</td></tr>`;
+        tbody.innerHTML += "<tr><td>" + lv + "</td><td>" + info.name + "</td><td>" + info.description + "</td></tr>";
       }
     }
 

@@ -10,34 +10,45 @@
 <body>
   <header class="header">
     <img src="https://www.sojitz-ti.com/resources/images/common/logo_stechi.svg" alt="双日テックイノベーション" class="header-logo">
-    <span class="header-title">AIスキルセルフチェック</span>
     <nav class="nav">
       <a href="index.html" class="active">ホーム</a>
       <a href="definitions.html">スキル定義</a>
-      <a href="competency.html">コンピテンシーマップ</a>
+      <a href="competency.html">マップ</a>
     </nav>
   </header>
 
   <div class="container">
     <div class="hero">
+      <div class="hero-icon">🎯</div>
       <h1>AIスキルセルフチェック</h1>
-      <p>あなたのAI活用スキルを自己評価し、現在のレベルとフィードバックを確認しましょう。</p>
+      <p>12の質問に答えて、あなたのAI活用スキルレベルを診断。AIからのフィードバックで次のステップが見えてきます。</p>
+    </div>
+
+    <!-- Step indicator -->
+    <div class="step-indicator">
+      <div class="step active"><span class="step-num">1</span>トラック選択</div>
+      <div class="step-line"></div>
+      <div class="step"><span class="step-num">2</span>セルフチェック</div>
+      <div class="step-line"></div>
+      <div class="step"><span class="step-num">3</span>結果確認</div>
     </div>
 
     <div class="card">
-      <h2>トラックを選択してください</h2>
-      <p>あなたの職種に合ったトラックを選んでセルフチェックを開始します。</p>
+      <h2>あなたの職種を選んでください</h2>
+      <p>トラックに応じた質問が表示されます。所要時間は約3分です。</p>
       <div class="track-grid">
         <div class="track-card" data-track="business" role="button" tabindex="0" aria-label="ビジネスユーザートラックを選択">
-          <h3>💼 ビジネスユーザー</h3>
-          <p>営業・企画・管理など、AIを業務効率化に活用する方向け</p>
+          <span class="track-icon">💼</span>
+          <h3>ビジネスユーザー</h3>
+          <p>営業・企画・管理など<br>AIを業務効率化に活用する方</p>
         </div>
         <div class="track-card" data-track="engineer" role="button" tabindex="0" aria-label="エンジニアトラックを選択">
-          <h3>💻 エンジニア</h3>
-          <p>開発・インフラ・データ分析など、AI技術を実装に活用する方向け</p>
+          <span class="track-icon">💻</span>
+          <h3>エンジニア</h3>
+          <p>開発・インフラ・データ分析など<br>AI技術を実装に活用する方</p>
         </div>
       </div>
-      <div id="track-error" style="color:var(--error);margin-top:12px;display:none;">トラックを選択してください。</div>
+      <div id="track-error" style="color:var(--error);margin-top:12px;display:none;font-size:14px;">トラックを選択してください。</div>
     </div>
   </div>
 
@@ -45,19 +56,17 @@
   <script src="js/selfcheck-app.js"></script>
   <script>
     SessionManager.init();
-    let selectedTrack = null;
 
     document.querySelectorAll(".track-card").forEach(card => {
       card.addEventListener("click", () => {
         document.querySelectorAll(".track-card").forEach(c => c.classList.remove("selected"));
         card.classList.add("selected");
-        selectedTrack = card.dataset.track;
+        const track = card.dataset.track;
         document.getElementById("track-error").style.display = "none";
-        SessionManager.setTrack(selectedTrack);
-        // 少し待ってから遷移
+        SessionManager.setTrack(track);
         setTimeout(() => {
-          window.location.href = "selfcheck.html?track=" + selectedTrack;
-        }, 300);
+          window.location.href = "selfcheck.html?track=" + track;
+        }, 350);
       });
       card.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); card.click(); }

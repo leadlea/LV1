@@ -10,33 +10,51 @@
 <body>
   <header class="header">
     <img src="https://www.sojitz-ti.com/resources/images/common/logo_stechi.svg" alt="双日テックイノベーション" class="header-logo">
-    <span class="header-title">AIスキルセルフチェック</span>
     <nav class="nav">
       <a href="index.html">ホーム</a>
       <a href="definitions.html">スキル定義</a>
-      <a href="competency.html">コンピテンシーマップ</a>
+      <a href="competency.html">マップ</a>
     </nav>
   </header>
 
   <div class="container">
+    <!-- Step indicator -->
+    <div class="step-indicator">
+      <div class="step done"><span class="step-num">✓</span>トラック選択</div>
+      <div class="step-line done"></div>
+      <div class="step active"><span class="step-num">2</span>セルフチェック</div>
+      <div class="step-line"></div>
+      <div class="step"><span class="step-num">3</span>結果確認</div>
+    </div>
+
     <div id="error-banner" class="error-banner"></div>
 
     <div class="card">
       <h2 id="check-title">セルフチェック</h2>
-      <p>各項目について、あなたの現在のスキルレベルを0〜4で自己評価してください。</p>
+      <p>各項目について、あなたの現在のスキルレベルを0〜4で評価してください。</p>
+      <div class="progress-bar-wrap" style="margin-top:16px;">
+        <div class="progress-bar-fill" id="progress-bar"></div>
+      </div>
+      <div style="text-align:right;font-size:12px;color:var(--text-light);" id="progress-text">0 / 12 回答済み</div>
     </div>
 
-    <div class="card">
-      <div id="check-items"></div>
+    <div id="common-section">
+      <div class="section-label common">📘 共通項目（全社員共通）</div>
+      <div id="common-items"></div>
     </div>
 
-    <div style="text-align:center;margin:24px 0;">
-      <button id="submit-btn" class="btn" type="button">送信する</button>
+    <div id="track-section">
+      <div class="section-label track" id="track-section-label">📗 トラック別項目</div>
+      <div id="track-items"></div>
+    </div>
+
+    <div style="text-align:center;margin:32px 0;">
+      <button id="submit-btn" class="btn btn-accent" type="button">📊 結果を見る</button>
     </div>
 
     <div id="loading" class="loading" style="display:none;">
       <div class="spinner"></div>
-      <p>結果を計算中...</p>
+      <p>AIがフィードバックを生成中...</p>
     </div>
   </div>
 
@@ -53,9 +71,29 @@
     } else {
       SessionManager.setTrack(track);
       const trackLabel = track === "business" ? "ビジネスユーザー" : "エンジニア";
-      document.getElementById("check-title").textContent = `セルフチェック（${trackLabel}）`;
-      renderCheckItems("check-items", track);
+      document.getElementById("check-title").textContent = "セルフチェック（" + trackLabel + "）";
+      document.getElementById("track-section-label").textContent =
+        track === "business" ? "📗 ビジネスユーザー項目" : "📗 エンジニア項目";
+
+      // Render items in two sections
+      renderCheckItemsSplit("common-items", "track-items", track);
     }
+
+    // Progress tracking
+    function updateProgress() {
+      const total = document.querySelectorAll(".check-item").length;
+      const answered = document.querySelectorAll(".check-item .rating-label.selected").length;
+      const pct = total > 0 ? (answered / total * 100) : 0;
+      document.getElementById("progress-bar").style.width = pct + "%";
+      document.getElementById("progress-text").textContent = answered + " / " + total + " 回答済み";
+    }
+
+    // Observe rating clicks for progress
+    document.addEventListener("click", (e) => {
+      if (e.target.closest(".rating-label")) {
+        setTimeout(updateProgress, 10);
+      }
+    });
 
     document.getElementById("submit-btn").addEventListener("click", async () => {
       const answers = collectAnswers();

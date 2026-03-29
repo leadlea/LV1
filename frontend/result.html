@@ -10,25 +10,31 @@
 <body>
   <header class="header">
     <img src="https://www.sojitz-ti.com/resources/images/common/logo_stechi.svg" alt="双日テックイノベーション" class="header-logo">
-    <span class="header-title">AIスキルセルフチェック</span>
     <nav class="nav">
       <a href="index.html">ホーム</a>
       <a href="definitions.html">スキル定義</a>
-      <a href="competency.html">コンピテンシーマップ</a>
+      <a href="competency.html">マップ</a>
     </nav>
   </header>
 
   <div class="container">
-    <div class="card" style="text-align:center;">
-      <h2>あなたのAIスキルレベル</h2>
-      <div id="level-display">
-        <div class="level-badge" id="level-badge">-</div>
-        <div class="level-name" id="level-name"></div>
-      </div>
+    <!-- Step indicator -->
+    <div class="step-indicator">
+      <div class="step done"><span class="step-num">✓</span>トラック選択</div>
+      <div class="step-line done"></div>
+      <div class="step done"><span class="step-num">✓</span>セルフチェック</div>
+      <div class="step-line done"></div>
+      <div class="step active"><span class="step-num">3</span>結果確認</div>
+    </div>
+
+    <div class="result-hero">
+      <p style="font-size:13px;color:var(--text-mid);margin-bottom:8px;">あなたのAIスキルレベル</p>
+      <div class="level-badge" id="level-badge">-</div>
+      <div class="level-name" id="level-name"></div>
     </div>
 
     <div class="card">
-      <h3>スコア詳細</h3>
+      <h3>📊 スコア詳細</h3>
       <div class="score-bar-container">
         <div class="score-bar-label"><span>共通スコア</span><span id="common-score">-</span></div>
         <div class="score-bar"><div class="score-bar-fill" id="common-bar" style="width:0%"></div></div>
@@ -44,13 +50,13 @@
     </div>
 
     <div class="card" id="feedback-card">
-      <h3>AIフィードバック</h3>
+      <h3>🤖 AIフィードバック</h3>
       <div id="feedback-content"></div>
     </div>
 
-    <div style="text-align:center;margin:24px 0;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-      <a href="definitions.html" class="btn btn-secondary">スキル定義を見る</a>
-      <a href="index.html" class="btn">もう一度チェックする</a>
+    <div style="text-align:center;margin:32px 0;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <a href="definitions.html" class="btn btn-secondary">📖 スキル定義を見る</a>
+      <a href="index.html" class="btn">🔄 もう一度チェック</a>
     </div>
   </div>
 
@@ -76,15 +82,14 @@
         document.getElementById("common-bar").style.width = (r.common_avg / 4 * 100) + "%";
         document.getElementById("track-bar").style.width = (r.track_avg / 4 * 100) + "%";
         document.getElementById("overall-bar").style.width = (r.overall_avg / 4 * 100) + "%";
-      }, 100);
+      }, 200);
 
-      // Feedback
       const fc = document.getElementById("feedback-content");
       if (r.feedback && !r.feedback_unavailable) {
         fc.innerHTML = `
-          <div class="feedback-section"><h4>💪 強み</h4><p>${r.feedback.strengths}</p></div>
-          <div class="feedback-section"><h4>📈 改善ポイント</h4><p>${r.feedback.improvements}</p></div>
-          <div class="feedback-section"><h4>🎯 次のアクション</h4><p>${r.feedback.next_actions}</p></div>
+          <div class="feedback-section strengths"><h4>💪 強み</h4><p>${r.feedback.strengths}</p></div>
+          <div class="feedback-section improvements"><h4>📈 改善ポイント</h4><p>${r.feedback.improvements}</p></div>
+          <div class="feedback-section actions"><h4>🎯 次のアクション</h4><p>${r.feedback.next_actions}</p></div>
         `;
       } else {
         fc.innerHTML = '<div class="feedback-unavailable">フィードバックは現在取得できません。スコアとレベル判定をご確認ください。</div>';
