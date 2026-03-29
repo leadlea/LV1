@@ -20,12 +20,12 @@ RETRYABLE_ERRORS = (
     "ModelTimeoutException",
 )
 
-_CODE_FENCE_RE = re.compile(r"^```(?:json)?\s*(.*?)\s*```$", flags=re.DOTALL | re.IGNORECASE)
+_CODE_FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)\s*```", flags=re.DOTALL | re.IGNORECASE)
 
 
 def strip_code_fence(text: str) -> str:
     """Remove markdown code fences (```json ... ```) from LLM output."""
-    m = _CODE_FENCE_RE.match(text.strip())
+    m = _CODE_FENCE_RE.search(text.strip())
     if m:
         return m.group(1).strip()
     return text.strip()
