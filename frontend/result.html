@@ -55,10 +55,13 @@
       <div id="feedback-content"></div>
     </div>
 
-    <div style="text-align:center;margin:32px 0;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+    <div class="result-actions" style="text-align:center;margin:32px 0;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
       <a href="definitions.html" class="btn btn-secondary">📖 スキル定義を見る</a>
       <a href="index.html" class="btn">🔄 もう一度チェック</a>
+      <button class="btn btn-secondary print-btn" type="button" onclick="window.print()">🖨️ 印刷</button>
     </div>
+
+    <div class="print-date" id="print-date"></div>
   </div>
 
   <script src="js/config.js"></script>
@@ -68,6 +71,15 @@
     const result = JSON.parse(sessionStorage.getItem("selfcheck_result") || "null");
     if (!result) { window.location.href = "index.html"; }
     else { renderResult(result); }
+
+    // 印刷日時を YYYY/MM/DD 形式で設定
+    (function() {
+      var now = new Date();
+      var y = now.getFullYear();
+      var m = ('0' + (now.getMonth() + 1)).slice(-2);
+      var d = ('0' + now.getDate()).slice(-2);
+      document.getElementById('print-date').textContent = '印刷日: ' + y + '/' + m + '/' + d;
+    })();
 
     function renderResult(r) {
       document.getElementById("level-badge").textContent = r.skill_level;

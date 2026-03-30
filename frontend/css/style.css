@@ -510,3 +510,109 @@ body {
   .check-item { padding: 16px 14px; }
   .level-badge { font-size: 22px; padding: 12px 28px; }
 }
+
+/* ===== Guide Box ===== */
+.guide-box {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  background: var(--accent-light);
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--text-mid);
+  line-height: 1.7;
+}
+.guide-icon { font-size: 20px; flex-shrink: 0; }
+.guide-text { flex: 1; }
+
+/* ===== Print Date (hidden on screen) ===== */
+.print-date { display: none; }
+
+/* ===== Print Styles ===== */
+@page {
+  margin: 10mm 12mm;
+  size: A4;
+}
+
+@media print {
+  body {
+    background: #fff !important;
+    font-size: 11px;
+    line-height: 1.6;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  header,
+  .header { display: none !important; }
+
+  .step-indicator { display: none !important; }
+
+  .print-btn,
+  .btn,
+  .btn-secondary,
+  .result-actions { display: none !important; }
+
+  .container {
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+
+  .result-hero {
+    padding: 16px 12px;
+    margin-bottom: 10px;
+    border-radius: 0;
+    background: #f0f4ff !important;
+    box-shadow: none;
+    break-inside: avoid;
+  }
+
+  .level-badge {
+    padding: 8px 24px;
+    font-size: 20px;
+    box-shadow: none;
+  }
+
+  .card {
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    box-shadow: none;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    break-inside: avoid;
+  }
+
+  .card h3 {
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+
+  .score-bar-container { margin: 8px 0; }
+
+  .score-bar {
+    height: 8px;
+  }
+
+  .feedback-section {
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    break-inside: avoid;
+  }
+
+  .feedback-section h4 { font-size: 12px; margin-bottom: 2px; }
+  .feedback-section p { font-size: 11px; line-height: 1.5; }
+
+  .print-date {
+    display: block !important;
+    text-align: right;
+    font-size: 10px;
+    color: #666;
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid #ccc;
+  }
+}
